@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
     },
     state: {
       name: `${cookiePrefix}next-auth.state`,
-      options: { httpOnly: true, sameSite: 'lax', path: '/', secure: useSecure, maxAge: 900 },
+      options: { httpOnly: true, sameSite: 'none', path: '/', secure: true, maxAge: 900 },
     },
     nonce: {
       name: `${cookiePrefix}next-auth.nonce`,
