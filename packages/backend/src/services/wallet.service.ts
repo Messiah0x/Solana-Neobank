@@ -18,12 +18,6 @@ export async function createWallet(userId: string) {
       encryptedKey: encrypted,
       keyIv: iv,
       keyTag: tag,
-      user: {
-        connectOrCreate: {
-          where: { id: userId },
-          create: { id: userId },
-        },
-      },
     },
     select: { id: true, publicKey: true, createdAt: true },
   });

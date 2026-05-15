@@ -1,4 +1,5 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
+import { MarginfiAccountWrapper } from '@mrgnlabs/marginfi-client-v2';
 import { prisma } from '../lib/prisma';
 import { decryptPrivateKey } from '../lib/encryption';
 import { createMarginfiClient } from '../lib/marginfi';
@@ -47,7 +48,7 @@ export async function deposit(userId: string, amountUsdc: number) {
   const accounts = await client.getMarginfiAccountsForAuthority(keypair.publicKey);
   const marginfiAccount = accounts[0] ?? (await client.createMarginfiAccount());
 
-  const signature = await marginfiAccount.deposit(amountUsdc, bank);
+  const signature = await marginfiAccount.deposit(amountUsdc, bank.address);
 
   await prisma.yieldPosition.upsert({
     where: { userId },
@@ -79,10 +80,11 @@ export async function withdraw(userId: string, amountUsdc: number) {
   const bank = client.getBankByMint(usdcMint);
   if (!bank) throw new Error('USDC bank not found');
 
-  const marginfiAccount = await client.getMarginfiAccount(
+  const marginfiAccount = await MarginfiAccountWrapper.fetch(
     new PublicKey(position.marginfiAccountPk),
+    client,
   );
-  const signature = await marginfiAccount.withdraw(amountUsdc, bank);
+  const signature = await marginfiAccount.withdraw(amountUsdc, bank.address);
 
   await prisma.yieldPosition.update({
     where: { userId },
