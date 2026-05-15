@@ -11,6 +11,7 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+  const errorCode = searchParams.get('error');
   const [loading, setLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,6 +65,11 @@ function SignInContent() {
           className="rounded-2xl border border-white/[0.08] p-8"
           style={{ background: 'linear-gradient(135deg, #151515 0%, #111111 100%)' }}
         >
+          {errorCode && (
+            <div className="mb-6 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+              <p className="text-xs font-mono text-red-400">error: {errorCode}</p>
+            </div>
+          )}
           <p className="text-sm text-white/50 text-center mb-8 leading-relaxed">
             Sign in to access your account
           </p>
