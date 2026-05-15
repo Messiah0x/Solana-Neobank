@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Inter } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
@@ -14,6 +14,13 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover', // enables safe-area-inset-* on iPhone notch + home bar
+  themeColor: '#0A0E1A',
+};
 
 export const metadata: Metadata = {
   title: 'Solbank — Your money, always earning',

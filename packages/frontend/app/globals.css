@@ -59,4 +59,13 @@
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
+
+  /* iPhone safe area */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+
+  /* Use dynamic viewport height — avoids Safari URL bar bug */
+  .min-h-dvh { min-height: 100dvh; }
+  .h-dvh     { height: 100dvh; }
 }

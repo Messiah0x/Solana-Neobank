@@ -54,7 +54,7 @@ export function Sidebar() {
       initial={{ x: -12, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 bottom-0 w-60 border-r border-white/[0.06] bg-background flex flex-col z-40"
+      className="hidden lg:flex fixed top-0 left-0 bottom-0 w-60 border-r border-white/[0.06] bg-background flex-col z-40"
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-white/[0.06] flex-shrink-0">
