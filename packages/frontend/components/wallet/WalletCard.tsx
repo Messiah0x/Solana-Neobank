@@ -34,13 +34,13 @@ export function WalletCard({ onCreateWallet, creating }: Props) {
 
       <h2 className="font-heading font-bold text-xl mb-2">Create your wallet</h2>
       <p className="text-sm text-white/40 max-w-xs mb-8 leading-relaxed">
-        A Solana wallet is generated locally and encrypted with AES-256-GCM. Your private key
-        never leaves the server unencrypted.
+        Your Solana wallet is secured by Privy's MPC enclave. Your private key
+        never touches our servers — only you hold it.
       </p>
 
       {/* Feature pills */}
       <div className="flex items-center gap-2 mb-8 flex-wrap justify-center">
-        {['Non-custodial', 'Instant', 'Encrypted at rest'].map((tag) => (
+        {['Non-custodial', 'MPC secured', 'Instant'].map((tag) => (
           <span
             key={tag}
             className="px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-xs text-white/40 font-medium"
