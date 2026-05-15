@@ -15,6 +15,14 @@ api.interceptors.response.use(
   },
 );
 
+export async function registerWallet(
+  userId: string,
+  publicKey: string,
+): Promise<{ id: string; publicKey: string; createdAt: string }> {
+  const { data } = await api.post('/api/wallet/register', { userId, publicKey });
+  return data.data;
+}
+
 export async function createWallet(userId: string): Promise<{ id: string; publicKey: string; createdAt: string }> {
   const { data } = await api.post('/api/wallet/create', { userId });
   return data.data;

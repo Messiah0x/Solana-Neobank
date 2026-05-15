@@ -16,9 +16,21 @@ const server = Fastify({
 });
 
 async function build() {
+  const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim());
+
   await server.register(cors, {
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // server-to-server
+      const ok =
+        allowedOrigins.some((allowed) => origin === allowed) ||
+        origin.endsWith('.vercel.app') ||
+        origin === 'http://localhost:3000';
+      cb(null, ok);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
   });
 
   await server.register(walletRoutes, { prefix: '/api/wallet' });

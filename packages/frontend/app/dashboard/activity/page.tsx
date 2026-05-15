@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -113,8 +114,9 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 export default function ActivityPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.email ?? session?.user?.id ?? null;
+  const { user } = usePrivy();
+  const userId = user?.id ?? null;
+  
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
 

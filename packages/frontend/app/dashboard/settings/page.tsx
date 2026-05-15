@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useSession, signOut } from 'next-auth/react';
+import { usePrivy } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { getWallet } from '@/lib/api';
+import { getPrivyUserInfo } from '@/lib/privy-utils';
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/25 mb-2 px-1">{children}</p>;
@@ -101,8 +103,9 @@ function ProviderBadge({ provider }: { provider?: string }) {
 }
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.email ?? session?.user?.id ?? null;
+  const { user, logout } = usePrivy();
+  const router = useRouter();
+  const userId = user?.id ?? null;
   const [signingOut, setSigningOut] = useState(false);
 
   const { data: wallet } = useSWR(
@@ -110,10 +113,7 @@ export default function SettingsPage() {
     () => getWallet(userId!),
   );
 
-  const name = session?.user?.name ?? 'Account';
-  const email = session?.user?.email ?? '';
-  const provider = (session?.user as any)?.provider as string | undefined;
-  const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+  const { name, email, image, provider, initials } = getPrivyUserInfo(user ?? null);
   const publicKey = wallet?.publicKey ?? null;
   const shortKey = publicKey ? `${publicKey.slice(0, 6)}···${publicKey.slice(-6)}` : null;
   const createdAt = wallet?.createdAt
@@ -122,7 +122,8 @@ export default function SettingsPage() {
 
   async function handleSignOut() {
     setSigningOut(true);
-    await signOut({ callbackUrl: '/auth/signin' });
+    await logout();
+    router.push('/auth/signin');
   }
 
   return (
@@ -151,8 +152,8 @@ export default function SettingsPage() {
                       color: '#D4AF7F',
                     }}
                   >
-                    {session?.user?.image ? (
-                      <img src={session.user.image} alt={name} className="w-full h-full object-cover" />
+                    {image ? (
+                      <img src={image} alt={name} className="w-full h-full object-cover" />
                     ) : (
                       initials
                     )}

@@ -1,7 +1,7 @@
 import { prisma } from './prisma';
 
-// The frontend sends session.user.email as "userId". We upsert the User row on
-// first contact so FK constraints are satisfied, then return the real db cuid.
+// Resolves any user identifier (email, cuid, or Privy DID like "did:privy:xxx")
+// to a stable DB row, creating one on first contact.
 export async function resolveDbUserId(emailOrId: string): Promise<string> {
   if (emailOrId.includes('@')) {
     const user = await prisma.user.upsert({
@@ -12,6 +12,7 @@ export async function resolveDbUserId(emailOrId: string): Promise<string> {
     });
     return user.id;
   }
+  // Privy DID or plain cuid — use as stable external ID
   const user = await prisma.user.upsert({
     where: { id: emailOrId },
     create: { id: emailOrId },

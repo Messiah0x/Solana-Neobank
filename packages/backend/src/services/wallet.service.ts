@@ -3,6 +3,18 @@ import { encryptPrivateKey } from '../lib/encryption';
 import { generateKeypair, getUsdcBalance, getSolBalance, getRecentTransactions } from './solana.service';
 import { resolveDbUserId } from '../lib/user';
 
+// Register a Privy-managed wallet — stores only the public key, no server-side key material.
+export async function registerExternalWallet(userId: string, publicKey: string) {
+  const dbUserId = await resolveDbUserId(userId);
+  const existing = await prisma.wallet.findUnique({ where: { userId: dbUserId } });
+  if (existing) return existing;
+
+  return prisma.wallet.create({
+    data: { userId: dbUserId, publicKey },
+    select: { id: true, publicKey: true, createdAt: true },
+  });
+}
+
 export async function createWallet(userId: string) {
   const dbUserId = await resolveDbUserId(userId);
   const existing = await prisma.wallet.findUnique({ where: { userId: dbUserId } });

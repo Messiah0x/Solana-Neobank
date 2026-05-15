@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+import { usePrivy } from '@privy-io/react-auth';
+import { getPrivyUserInfo } from '@/lib/privy-utils';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -78,11 +79,12 @@ function ControlButton({ icon, label, active, onClick, disabled }: ControlButton
 }
 
 export default function CardPage() {
-  const { data: session } = useSession();
+  const { user } = usePrivy();
+  const { name } = getPrivyUserInfo(user ?? null);
   const [frozen, setFrozen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
-  const displayName = session?.user?.name?.toUpperCase() ?? 'AVANOR MEMBER';
+  const displayName = name.toUpperCase() || 'AVANOR MEMBER';
 
   return (
     <div className="min-h-dvh bg-background flex">

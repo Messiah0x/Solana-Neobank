@@ -3,7 +3,12 @@ import { z } from 'zod';
 import * as walletService from '../services/wallet.service';
 
 const createWalletBody = z.object({
-  userId: z.string().min(1).max(128),
+  userId: z.string().min(1).max(256),
+});
+
+const registerWalletBody = z.object({
+  userId: z.string().min(1).max(256),
+  publicKey: z.string().min(32).max(64),
 });
 
 function handleError(err: unknown, reply: FastifyReply) {
@@ -15,6 +20,20 @@ function handleError(err: unknown, reply: FastifyReply) {
 }
 
 export default async function walletRoutes(fastify: FastifyInstance) {
+  // POST /api/wallet/register — stores a Privy-managed wallet (public key only)
+  fastify.post('/register', async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { userId, publicKey } = registerWalletBody.parse(req.body);
+      const wallet = await walletService.registerExternalWallet(userId, publicKey);
+      return reply.code(201).send({ success: true, data: wallet });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return reply.code(400).send({ success: false, error: err.errors });
+      }
+      return handleError(err, reply);
+    }
+  });
+
   // POST /api/wallet/create
   fastify.post('/create', async (req: FastifyRequest, reply: FastifyReply) => {
     try {

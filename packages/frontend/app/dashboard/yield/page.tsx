@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+import { usePrivy } from '@privy-io/react-auth';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -32,8 +32,9 @@ function ProjectionCard({ label, value, delay }: { label: string; value: number;
 }
 
 export default function YieldPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.email ?? session?.user?.id ?? null;
+  const { user } = usePrivy();
+  const userId = user?.id ?? null;
+  
 
   const { data: wallet } = useSWR(
     userId ? `wallet-${userId}` : null,

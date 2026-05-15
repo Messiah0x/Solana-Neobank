@@ -1,13 +1,19 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { usePrivy } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
 import { AvanorLogo } from '@/components/brand/AvanorLogo';
+import { getPrivyUserInfo } from '@/lib/privy-utils';
 
 export function Header() {
-  const { data: session } = useSession();
-  const initials = session?.user?.name
-    ? session.user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-    : 'A';
+  const { user, logout } = usePrivy();
+  const router = useRouter();
+  const { initials } = getPrivyUserInfo(user ?? null);
+
+  async function handleSignOut() {
+    await logout();
+    router.push('/auth/signin');
+  }
 
   return (
     <header
@@ -23,7 +29,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         <span className="w-2 h-2 rounded-full bg-success animate-pulse lg:hidden" />
         <button
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={handleSignOut}
           className="w-8 h-8 rounded-full bg-accent-muted border border-accent-border flex items-center justify-center hover:bg-accent/20 transition-colors"
           title="Sign out"
         >

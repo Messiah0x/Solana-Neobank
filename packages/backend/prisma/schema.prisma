@@ -39,9 +39,9 @@ model Wallet {
   id           String   @id @default(cuid())
   userId       String   @unique
   publicKey    String   @unique
-  encryptedKey String
-  keyIv        String
-  keyTag       String
+  encryptedKey String?
+  keyIv        String?
+  keyTag       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

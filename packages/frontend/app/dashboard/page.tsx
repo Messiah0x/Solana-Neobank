@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -13,7 +14,7 @@ import { BalanceHero } from '@/components/dashboard/BalanceHero';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import {
-  createWallet,
+  registerWallet,
   getWallet,
   getWalletBalance,
   getWalletTransactions,
@@ -21,22 +22,60 @@ import {
 } from '@/lib/api';
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.email ?? session?.user?.id ?? null;
+  const { ready, authenticated, user } = usePrivy();
+  const { wallets, createWallet: createPrivyWallet } = useSolanaWallets();
+  const router = useRouter();
+
+  const userId = user?.id ?? null;
+  const privyWallet = wallets[0] ?? null;
+  const privyPublicKey = privyWallet?.address ?? null;
 
   const [walletPublicKey, setWalletPublicKey] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [walletChecked, setWalletChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Try to load existing wallet once we have a userId
+  // Redirect to sign-in if not authenticated
   useEffect(() => {
-    if (!userId) return;
-    getWallet(userId)
-      .then((w) => setWalletPublicKey(w.publicKey))
-      .catch(() => {})
-      .finally(() => setWalletChecked(true));
-  }, [userId]);
+    if (ready && !authenticated) {
+      router.replace('/auth/signin');
+    }
+  }, [ready, authenticated, router]);
+
+  // Once we have a Privy wallet + userId, sync it with our backend
+  const syncWallet = useCallback(async () => {
+    if (!userId || !privyPublicKey) return;
+    setSyncing(true);
+    try {
+      // Try to fetch existing wallet from backend first
+      try {
+        const w = await getWallet(userId);
+        setWalletPublicKey(w.publicKey);
+      } catch {
+        // Wallet not in backend yet — register the Privy wallet public key
+        const w = await registerWallet(userId, privyPublicKey);
+        setWalletPublicKey(w.publicKey);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sync wallet');
+    } finally {
+      setSyncing(false);
+      setWalletChecked(true);
+    }
+  }, [userId, privyPublicKey]);
+
+  useEffect(() => {
+    if (userId && privyPublicKey) {
+      syncWallet();
+    } else if (userId && !privyPublicKey && ready) {
+      // User is logged in but has no Privy wallet yet — check backend anyway
+      getWallet(userId)
+        .then((w) => setWalletPublicKey(w.publicKey))
+        .catch(() => {})
+        .finally(() => setWalletChecked(true));
+    }
+  }, [userId, privyPublicKey, ready, syncWallet]);
 
   const { data: balance, isLoading: balanceLoading, mutate: mutateBalance } = useSWR(
     walletPublicKey && userId ? `balance-${userId}` : null,
@@ -60,13 +99,10 @@ export default function DashboardPage() {
     setCreating(true);
     setError(null);
     try {
-      const wallet = await createWallet(userId!);
-      setWalletPublicKey(wallet.publicKey);
-      mutateBalance();
-      mutateYield();
-    } catch (err: unknown) {
+      await createPrivyWallet();
+      // syncWallet will be triggered by the wallets dependency changing
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create wallet');
-    } finally {
       setCreating(false);
     }
   }
@@ -77,6 +113,7 @@ export default function DashboardPage() {
   }
 
   const hasWallet = !!walletPublicKey;
+  const isLoading = !ready || (!walletChecked && authenticated);
 
   return (
     <div className="min-h-dvh bg-background flex">
@@ -96,8 +133,7 @@ export default function DashboardPage() {
             </motion.div>
           )}
 
-          {!walletChecked ? (
-            /* Loading skeleton while we check for existing wallet */
+          {isLoading || syncing ? (
             <div className="px-4 pt-4 space-y-3">
               <div className="rounded-3xl border border-white/[0.06] bg-surface/30 h-44 animate-pulse" />
               <div className="grid grid-cols-4 gap-3 pt-1">
@@ -107,7 +143,6 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : !hasWallet ? (
-            /* Wallet creation */
             <div className="px-4 pt-5 lg:pt-10 lg:px-10">
               <div className="max-w-md">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-4 px-1">
@@ -117,9 +152,7 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : (
-            /* Full dashboard — single column on mobile, 2-col on desktop */
             <div className="lg:px-8 lg:pt-6">
-              {/* Balance hero — full width on both */}
               <BalanceHero
                 usdc={balance?.usdc ?? 0}
                 sol={balance?.sol ?? 0}
@@ -129,12 +162,9 @@ export default function DashboardPage() {
                 publicKey={walletPublicKey ?? ''}
               />
 
-              {/* Quick actions — full width */}
               <QuickActions />
 
-              {/* Below quick actions: 2-col on desktop, single col on mobile */}
               <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-6 lg:mt-4">
-                {/* Yield card */}
                 <div className="px-4 pt-4 pb-1 lg:px-0 lg:pt-0 lg:pb-0 lg:order-2">
                   <YieldCard
                     yieldData={yieldData}
@@ -145,7 +175,6 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                {/* Activity feed */}
                 <div className="lg:order-1">
                   <ActivityFeed
                     transactions={transactions}
