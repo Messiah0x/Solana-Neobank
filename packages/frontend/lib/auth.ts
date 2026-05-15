@@ -23,6 +23,17 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   debug: process.env.NODE_ENV === 'production',
+  logger: {
+    error(code, metadata) {
+      console.error('[NEXTAUTH_FULL_ERROR]', code, JSON.stringify(metadata, null, 2));
+    },
+    warn(code) {
+      console.warn('[NEXTAUTH_WARN]', code);
+    },
+    debug(code, metadata) {
+      console.log('[NEXTAUTH_DEBUG]', code, JSON.stringify(metadata, null, 2));
+    },
+  },
   cookies: {
     sessionToken: {
       name: `${cookiePrefix}next-auth.session-token`,
