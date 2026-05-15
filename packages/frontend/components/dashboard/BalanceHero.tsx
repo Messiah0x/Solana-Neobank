@@ -22,14 +22,14 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: 
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="relative rounded-3xl overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #0D1530 0%, #0A1020 50%, #080C18 100%)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          background: 'linear-gradient(135deg, #1A1510 0%, #0F0D0A 50%, #0A0A0A 100%)',
+          border: '1px solid rgba(212,175,127,0.12)',
         }}
       >
-        {/* Blue glow */}
+        {/* Gold glow */}
         <div
           className="absolute top-0 right-0 w-56 h-56 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(0,102,255,0.18) 0%, transparent 70%)', transform: 'translate(20%, -20%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(212,175,127,0.14) 0%, transparent 70%)', transform: 'translate(20%, -20%)' }}
         />
         {/* Green glow when earning */}
         {hasYield && (

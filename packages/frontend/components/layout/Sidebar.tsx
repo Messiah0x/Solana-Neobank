@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { AvanorLogo } from '@/components/brand/AvanorLogo';
 
 const nav = [
   {
@@ -58,9 +59,7 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-white/[0.06] flex-shrink-0">
-        <span className="font-heading font-bold text-xl tracking-tight">
-          sol<span className="text-accent">bank</span>
-        </span>
+        <AvanorLogo size={28} showWordmark />
       </div>
 
       {/* Nav items */}
@@ -76,7 +75,7 @@ export function Sidebar() {
               <div
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
                   active
-                    ? 'bg-accent-muted text-accent border border-accent/15'
+                    ? 'bg-accent-muted text-accent border border-accent-border'
                     : item.comingSoon
                     ? 'text-white/25 cursor-not-allowed'
                     : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04]'

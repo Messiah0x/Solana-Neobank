@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Inter } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
+import { SessionProvider } from '@/components/providers/SessionProvider';
 import './globals.css';
 
 const spaceGrotesk = Space_Grotesk({
@@ -19,14 +20,14 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover', // enables safe-area-inset-* on iPhone notch + home bar
-  themeColor: '#0A0E1A',
+  themeColor: '#0A0A0A',
 };
 
 export const metadata: Metadata = {
-  title: 'Solbank — Your money, always earning',
+  title: 'Avanor — Your money, always earning',
   description:
-    'The first non-custodial neobank on Solana. Earn DeFi yield automatically. Spend anywhere with Visa. You hold the keys.',
-  keywords: ['solana', 'neobank', 'defi', 'yield', 'usdc', 'crypto'],
+    'The first non-custodial private banking platform on Solana. Earn DeFi yield automatically. Spend anywhere with Visa. You hold the keys.',
+  keywords: ['solana', 'neobank', 'defi', 'yield', 'usdc', 'crypto', 'avanor'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${GeistMono.variable}`}
     >
-      <body className="bg-background text-white antialiased">{children}</body>
+      <body className="bg-background text-white antialiased">
+          <SessionProvider>{children}</SessionProvider>
+        </body>
     </html>
   );
 }

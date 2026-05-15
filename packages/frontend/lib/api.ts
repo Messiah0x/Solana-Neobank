@@ -21,17 +21,17 @@ export async function createWallet(userId: string): Promise<{ id: string; public
 }
 
 export async function getWallet(userId: string): Promise<{ id: string; publicKey: string; createdAt: string }> {
-  const { data } = await api.get(`/api/wallet/${userId}`);
+  const { data } = await api.get(`/api/wallet/${encodeURIComponent(userId)}`);
   return data.data;
 }
 
 export async function getWalletBalance(userId: string): Promise<{ publicKey: string; usdc: number; sol: number }> {
-  const { data } = await api.get(`/api/wallet/${userId}/balance`);
+  const { data } = await api.get(`/api/wallet/${encodeURIComponent(userId)}/balance`);
   return data.data;
 }
 
 export async function getWalletTransactions(userId: string, limit = 10) {
-  const { data } = await api.get(`/api/wallet/${userId}/transactions`, { params: { limit } });
+  const { data } = await api.get(`/api/wallet/${encodeURIComponent(userId)}/transactions`, { params: { limit } });
   return data.data;
 }
 
@@ -48,7 +48,7 @@ export async function getYieldData(userId: string): Promise<{
   depositedAt: string | null;
   protocol: string;
 }> {
-  const { data } = await api.get(`/api/yield/${userId}`);
+  const { data } = await api.get(`/api/yield/${encodeURIComponent(userId)}`);
   return data.data;
 }
 

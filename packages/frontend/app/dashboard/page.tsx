@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -19,37 +20,39 @@ import {
   getYieldData,
 } from '@/lib/api';
 
-const DEMO_USER_ID = 'demo-user-001';
-
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const userId = session?.user?.email ?? session?.user?.id ?? null;
+
   const [walletPublicKey, setWalletPublicKey] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [walletChecked, setWalletChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Try to load existing wallet on mount
+  // Try to load existing wallet once we have a userId
   useEffect(() => {
-    getWallet(DEMO_USER_ID)
+    if (!userId) return;
+    getWallet(userId)
       .then((w) => setWalletPublicKey(w.publicKey))
       .catch(() => {})
       .finally(() => setWalletChecked(true));
-  }, []);
+  }, [userId]);
 
   const { data: balance, isLoading: balanceLoading, mutate: mutateBalance } = useSWR(
-    walletPublicKey ? `balance-${DEMO_USER_ID}` : null,
-    () => getWalletBalance(DEMO_USER_ID),
+    walletPublicKey && userId ? `balance-${userId}` : null,
+    () => getWalletBalance(userId!),
     { refreshInterval: 30_000 },
   );
 
   const { data: yieldData, isLoading: yieldLoading, mutate: mutateYield } = useSWR(
-    walletPublicKey ? `yield-${DEMO_USER_ID}` : null,
-    () => getYieldData(DEMO_USER_ID),
+    walletPublicKey && userId ? `yield-${userId}` : null,
+    () => getYieldData(userId!),
     { refreshInterval: 60_000 },
   );
 
   const { data: transactions, isLoading: txLoading } = useSWR(
-    walletPublicKey ? `tx-${DEMO_USER_ID}` : null,
-    () => getWalletTransactions(DEMO_USER_ID, 5),
+    walletPublicKey && userId ? `tx-${userId}` : null,
+    () => getWalletTransactions(userId!, 5),
     { refreshInterval: 30_000 },
   );
 
@@ -57,7 +60,7 @@ export default function DashboardPage() {
     setCreating(true);
     setError(null);
     try {
-      const wallet = await createWallet(DEMO_USER_ID);
+      const wallet = await createWallet(userId!);
       setWalletPublicKey(wallet.publicKey);
       mutateBalance();
       mutateYield();
@@ -137,7 +140,7 @@ export default function DashboardPage() {
                     yieldData={yieldData}
                     isLoading={yieldLoading}
                     usdcBalance={balance?.usdc ?? 0}
-                    userId={DEMO_USER_ID}
+                    userId={userId!}
                     onDepositSuccess={handleDepositSuccess}
                   />
                 </div>

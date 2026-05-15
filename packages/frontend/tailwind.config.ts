@@ -9,13 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#0A0E1A',
-        surface: '#0F1322',
-        elevated: '#151926',
-        muted: '#1A1F2E',
-        accent: '#0066FF',
-        'accent-hover': '#0052CC',
-        'accent-muted': 'rgba(0, 102, 255, 0.12)',
+        background: '#0A0A0A',
+        surface: '#111111',
+        elevated: '#1A1A1A',
+        muted: '#222222',
+        accent: '#D4AF7F',
+        'accent-hover': '#C49A65',
+        'accent-muted': 'rgba(212, 175, 127, 0.10)',
+        'accent-border': 'rgba(212, 175, 127, 0.20)',
+        gold: '#D4AF7F',
+        'gold-soft': '#B18C5A',
+        ivory: '#F7F5F0',
         success: '#10B981',
         error: '#EF4444',
         warning: '#F59E0B',
@@ -26,8 +30,9 @@ const config: Config = {
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
       backgroundImage: {
-        'gradient-glow': 'radial-gradient(ellipse at 50% 0%, rgba(0, 102, 255, 0.12) 0%, transparent 60%)',
+        'gradient-glow': 'radial-gradient(ellipse at 50% 0%, rgba(212, 175, 127, 0.08) 0%, transparent 60%)',
         'gradient-card': 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
+        'gradient-gold': 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)',
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
