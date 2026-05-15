@@ -1,0 +1,67 @@
+import { prisma } from '../lib/prisma';
+import { encryptPrivateKey } from '../lib/encryption';
+import { generateKeypair, getUsdcBalance, getSolBalance, getRecentTransactions } from './solana.service';
+
+export async function createWallet(userId: string) {
+  const existing = await prisma.wallet.findUnique({ where: { userId } });
+  if (existing) {
+    throw Object.assign(new Error('Wallet already exists for this user'), { code: 'WALLET_EXISTS' });
+  }
+
+  const keypair = generateKeypair();
+  const { encrypted, iv, tag } = encryptPrivateKey(keypair.secretKey);
+
+  const wallet = await prisma.wallet.create({
+    data: {
+      userId,
+      publicKey: keypair.publicKey.toString(),
+      encryptedKey: encrypted,
+      keyIv: iv,
+      keyTag: tag,
+      user: {
+        connectOrCreate: {
+          where: { id: userId },
+          create: { id: userId },
+        },
+      },
+    },
+    select: { id: true, publicKey: true, createdAt: true },
+  });
+
+  return wallet;
+}
+
+export async function getWallet(userId: string) {
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId },
+    select: { id: true, publicKey: true, createdAt: true },
+  });
+  if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
+  return wallet;
+}
+
+export async function getWalletBalance(userId: string) {
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId },
+    select: { publicKey: true },
+  });
+  if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
+
+  // Fetch USDC and SOL in parallel — never wait sequentially
+  const [usdc, sol] = await Promise.all([
+    getUsdcBalance(wallet.publicKey),
+    getSolBalance(wallet.publicKey),
+  ]);
+
+  return { publicKey: wallet.publicKey, usdc, sol };
+}
+
+export async function getWalletTransactions(userId: string, limit = 10) {
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId },
+    select: { publicKey: true },
+  });
+  if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
+
+  return getRecentTransactions(wallet.publicKey, limit);
+}
