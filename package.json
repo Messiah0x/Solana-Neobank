@@ -1,9 +1,11 @@
 {
   "name": "solana-neobank",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "postinstall": "node scripts/patch-uuid-esm.js",
+    "postinstall": "patch-package",
     "dev": "concurrently \"npm run dev --workspace=packages/backend\" \"npm run dev --workspace=packages/frontend\"",
     "build": "npm run build --workspaces",
     "db:generate": "npm run db:generate --workspace=packages/backend",
@@ -21,6 +23,7 @@
     }
   },
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "concurrently": "^8.2.0",
+    "patch-package": "^8.0.1"
   }
 }
