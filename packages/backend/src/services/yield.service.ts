@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import { decryptPrivateKey } from '../lib/encryption';
 import { createMarginfiClient } from '../lib/marginfi';
 import { NETWORK } from '../lib/helius';
+import { resolveDbUserId } from '../lib/user';
 
 const USDC_MINT: Record<string, string> = {
   'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
@@ -13,8 +14,8 @@ const USDC_MINT: Record<string, string> = {
 const FALLBACK_APY = 8.4;
 const SECONDS_PER_YEAR = 365.25 * 24 * 3600;
 
-async function getUserKeypair(userId: string): Promise<Keypair> {
-  const wallet = await prisma.wallet.findUnique({ where: { userId } });
+async function getUserKeypair(dbUserId: string): Promise<Keypair> {
+  const wallet = await prisma.wallet.findUnique({ where: { userId: dbUserId } });
   if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
   const secretKey = decryptPrivateKey(wallet.encryptedKey, wallet.keyIv, wallet.keyTag);
   return Keypair.fromSecretKey(secretKey);
@@ -38,7 +39,8 @@ export async function getCurrentApy(): Promise<number> {
 export async function deposit(userId: string, amountUsdc: number) {
   if (amountUsdc <= 0) throw new Error('Amount must be positive');
 
-  const keypair = await getUserKeypair(userId);
+  const dbUserId = await resolveDbUserId(userId);
+  const keypair = await getUserKeypair(dbUserId);
   const client = await createMarginfiClient(keypair);
 
   const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
@@ -51,9 +53,9 @@ export async function deposit(userId: string, amountUsdc: number) {
   const signature = await marginfiAccount.deposit(amountUsdc, bank.address);
 
   await prisma.yieldPosition.upsert({
-    where: { userId },
+    where: { userId: dbUserId },
     create: {
-      userId,
+      userId: dbUserId,
       depositAmount: amountUsdc,
       depositedAt: new Date(),
       protocol: 'marginfi',
@@ -69,11 +71,12 @@ export async function deposit(userId: string, amountUsdc: number) {
 }
 
 export async function withdraw(userId: string, amountUsdc: number) {
-  const position = await prisma.yieldPosition.findUnique({ where: { userId } });
+  const dbUserId = await resolveDbUserId(userId);
+  const position = await prisma.yieldPosition.findUnique({ where: { userId: dbUserId } });
   if (!position?.marginfiAccountPk)
     throw Object.assign(new Error('No yield position found'), { code: 'NOT_FOUND' });
 
-  const keypair = await getUserKeypair(userId);
+  const keypair = await getUserKeypair(dbUserId);
   const client = await createMarginfiClient(keypair);
 
   const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
@@ -87,7 +90,7 @@ export async function withdraw(userId: string, amountUsdc: number) {
   const signature = await marginfiAccount.withdraw(amountUsdc, bank.address);
 
   await prisma.yieldPosition.update({
-    where: { userId },
+    where: { userId: dbUserId },
     data: { depositAmount: Math.max(0, position.depositAmount - amountUsdc) },
   });
 
@@ -95,8 +98,9 @@ export async function withdraw(userId: string, amountUsdc: number) {
 }
 
 export async function getYieldData(userId: string) {
+  const dbUserId = await resolveDbUserId(userId);
   const [position, apy] = await Promise.all([
-    prisma.yieldPosition.findUnique({ where: { userId } }),
+    prisma.yieldPosition.findUnique({ where: { userId: dbUserId } }),
     getCurrentApy(),
   ]);
 

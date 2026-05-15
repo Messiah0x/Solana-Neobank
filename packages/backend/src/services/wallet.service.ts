@@ -1,9 +1,11 @@
 import { prisma } from '../lib/prisma';
 import { encryptPrivateKey } from '../lib/encryption';
 import { generateKeypair, getUsdcBalance, getSolBalance, getRecentTransactions } from './solana.service';
+import { resolveDbUserId } from '../lib/user';
 
 export async function createWallet(userId: string) {
-  const existing = await prisma.wallet.findUnique({ where: { userId } });
+  const dbUserId = await resolveDbUserId(userId);
+  const existing = await prisma.wallet.findUnique({ where: { userId: dbUserId } });
   if (existing) {
     throw Object.assign(new Error('Wallet already exists for this user'), { code: 'WALLET_EXISTS' });
   }
@@ -13,7 +15,7 @@ export async function createWallet(userId: string) {
 
   const wallet = await prisma.wallet.create({
     data: {
-      userId,
+      userId: dbUserId,
       publicKey: keypair.publicKey.toString(),
       encryptedKey: encrypted,
       keyIv: iv,
@@ -26,8 +28,9 @@ export async function createWallet(userId: string) {
 }
 
 export async function getWallet(userId: string) {
+  const dbUserId = await resolveDbUserId(userId);
   const wallet = await prisma.wallet.findUnique({
-    where: { userId },
+    where: { userId: dbUserId },
     select: { id: true, publicKey: true, createdAt: true },
   });
   if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
@@ -35,13 +38,13 @@ export async function getWallet(userId: string) {
 }
 
 export async function getWalletBalance(userId: string) {
+  const dbUserId = await resolveDbUserId(userId);
   const wallet = await prisma.wallet.findUnique({
-    where: { userId },
+    where: { userId: dbUserId },
     select: { publicKey: true },
   });
   if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
 
-  // Fetch USDC and SOL in parallel — never wait sequentially
   const [usdc, sol] = await Promise.all([
     getUsdcBalance(wallet.publicKey),
     getSolBalance(wallet.publicKey),
@@ -51,8 +54,9 @@ export async function getWalletBalance(userId: string) {
 }
 
 export async function getWalletTransactions(userId: string, limit = 10) {
+  const dbUserId = await resolveDbUserId(userId);
   const wallet = await prisma.wallet.findUnique({
-    where: { userId },
+    where: { userId: dbUserId },
     select: { publicKey: true },
   });
   if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
