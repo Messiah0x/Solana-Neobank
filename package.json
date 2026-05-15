@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
+    "postinstall": "node scripts/patch-uuid-esm.js",
     "dev": "concurrently \"npm run dev --workspace=packages/backend\" \"npm run dev --workspace=packages/frontend\"",
     "build": "npm run build --workspaces",
     "db:generate": "npm run db:generate --workspace=packages/backend",
@@ -14,7 +15,10 @@
     "node": ">=20"
   },
   "overrides": {
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "rpc-websockets": {
+      "uuid": "^8.3.2"
+    }
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
