@@ -2,9 +2,6 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 
-const useSecure = process.env.NODE_ENV === 'production';
-const cookiePrefix = useSecure ? '__Secure-' : '';
-
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -14,6 +11,7 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      checks: ['none'],
     }),
   ],
   pages: {
@@ -34,28 +32,6 @@ export const authOptions: NextAuthOptions = {
     },
     debug(code, metadata) {
       console.log(`[DBG:${code}]`, JSON.stringify(metadata)?.slice(0, 200));
-    },
-  },
-  cookies: {
-    sessionToken: {
-      name: `${cookiePrefix}next-auth.session-token`,
-      options: { httpOnly: true, sameSite: 'lax', path: '/', secure: useSecure },
-    },
-    callbackUrl: {
-      name: `${cookiePrefix}next-auth.callback-url`,
-      options: { sameSite: 'lax', path: '/', secure: useSecure },
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: { httpOnly: true, sameSite: 'lax', path: '/', secure: useSecure },
-    },
-    state: {
-      name: `${cookiePrefix}next-auth.state`,
-      options: { httpOnly: true, sameSite: 'none', path: '/', secure: true, maxAge: 900 },
-    },
-    nonce: {
-      name: `${cookiePrefix}next-auth.nonce`,
-      options: { httpOnly: true, sameSite: 'lax', path: '/', secure: useSecure },
     },
   },
   callbacks: {
