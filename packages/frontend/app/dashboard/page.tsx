@@ -7,9 +7,10 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { WalletCard } from '@/components/wallet/WalletCard';
 import { BalanceDisplay } from '@/components/wallet/BalanceDisplay';
-import { createWallet, getWalletBalance } from '@/lib/api';
+import { YieldCard } from '@/components/yield/YieldCard';
+import { createWallet, getWalletBalance, getYieldData } from '@/lib/api';
 
-// For Phase 1, we use a demo user. Phase 5 (KYC) replaces this with auth.
+// Phase 5 (KYC) replaces this with real auth.
 const DEMO_USER_ID = 'demo-user-001';
 
 export default function DashboardPage() {
@@ -17,10 +18,24 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: balance, isLoading, mutate } = useSWR(
+  const {
+    data: balance,
+    isLoading: balanceLoading,
+    mutate: mutateBalance,
+  } = useSWR(
     walletPublicKey ? `balance-${DEMO_USER_ID}` : null,
     () => getWalletBalance(DEMO_USER_ID),
     { refreshInterval: 30_000 },
+  );
+
+  const {
+    data: yieldData,
+    isLoading: yieldLoading,
+    mutate: mutateYield,
+  } = useSWR(
+    walletPublicKey ? `yield-${DEMO_USER_ID}` : null,
+    () => getYieldData(DEMO_USER_ID),
+    { refreshInterval: 60_000 },
   );
 
   async function handleCreateWallet() {
@@ -29,13 +44,18 @@ export default function DashboardPage() {
     try {
       const wallet = await createWallet(DEMO_USER_ID);
       setWalletPublicKey(wallet.publicKey);
-      mutate();
+      mutateBalance();
+      mutateYield();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create wallet';
-      setError(msg);
+      setError(err instanceof Error ? err.message : 'Failed to create wallet');
     } finally {
       setCreating(false);
     }
+  }
+
+  function handleDepositSuccess() {
+    mutateBalance();
+    mutateYield();
   }
 
   return (
@@ -52,7 +72,6 @@ export default function DashboardPage() {
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-5xl"
           >
-            {/* Page header */}
             <div className="mb-8">
               <h1 className="font-heading font-bold text-2xl tracking-tight mb-1">Overview</h1>
               <p className="text-sm text-white/35">Your Solana neobank dashboard</p>
@@ -69,13 +88,27 @@ export default function DashboardPage() {
             )}
 
             {walletPublicKey ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <BalanceDisplay
-                  balance={balance}
-                  isLoading={isLoading}
-                  publicKey={walletPublicKey}
-                  onRefresh={() => mutate()}
-                />
+              <div className="space-y-4">
+                {/* Row 1: USDC balance + SOL balance */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <BalanceDisplay
+                    balance={balance}
+                    isLoading={balanceLoading}
+                    publicKey={walletPublicKey}
+                    onRefresh={() => mutateBalance()}
+                  />
+                </div>
+
+                {/* Row 2: Yield engine — full width */}
+                <div className="grid grid-cols-2 gap-4">
+                  <YieldCard
+                    yieldData={yieldData}
+                    isLoading={yieldLoading}
+                    usdcBalance={balance?.usdc ?? 0}
+                    userId={DEMO_USER_ID}
+                    onDepositSuccess={handleDepositSuccess}
+                  />
+                </div>
               </div>
             ) : (
               <WalletCard onCreateWallet={handleCreateWallet} creating={creating} />

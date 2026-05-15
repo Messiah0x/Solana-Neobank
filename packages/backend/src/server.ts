@@ -2,6 +2,7 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import walletRoutes from './routes/wallet';
+import yieldRoutes from './routes/yield';
 import healthRoutes from './routes/health';
 
 const server = Fastify({
@@ -21,6 +22,7 @@ async function build() {
   });
 
   await server.register(walletRoutes, { prefix: '/api/wallet' });
+  await server.register(yieldRoutes, { prefix: '/api/yield' });
   await server.register(healthRoutes, { prefix: '/api' });
 
   server.setErrorHandler((err, _req, reply) => {

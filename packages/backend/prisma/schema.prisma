@@ -14,9 +14,25 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  wallet Wallet?
+  wallet        Wallet?
+  yieldPosition YieldPosition?
 
   @@map("users")
+}
+
+model YieldPosition {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  depositAmount    Float
+  depositedAt      DateTime
+  protocol         String   @default("marginfi")
+  marginfiAccountPk String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("yield_positions")
 }
 
 model Wallet {

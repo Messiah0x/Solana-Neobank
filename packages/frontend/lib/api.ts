@@ -34,3 +34,30 @@ export async function getWalletTransactions(userId: string, limit = 10) {
   const { data } = await api.get(`/api/wallet/${userId}/transactions`, { params: { limit } });
   return data.data;
 }
+
+export async function getYieldApy(): Promise<number> {
+  const { data } = await api.get('/api/yield/apy');
+  return data.data.apy;
+}
+
+export async function getYieldData(userId: string): Promise<{
+  hasPosition: boolean;
+  apy: number;
+  depositedAmount: number;
+  earnedYield: number;
+  depositedAt: string | null;
+  protocol: string;
+}> {
+  const { data } = await api.get(`/api/yield/${userId}`);
+  return data.data;
+}
+
+export async function depositUsdc(userId: string, amountUsdc: number) {
+  const { data } = await api.post('/api/yield/deposit', { userId, amountUsdc });
+  return data.data;
+}
+
+export async function withdrawUsdc(userId: string, amountUsdc: number) {
+  const { data } = await api.post('/api/yield/withdraw', { userId, amountUsdc });
+  return data.data;
+}
