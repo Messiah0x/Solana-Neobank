@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
+  debug: process.env.NODE_ENV === 'production',
   cookies: {
     sessionToken: {
       name: `${cookiePrefix}next-auth.session-token`,
