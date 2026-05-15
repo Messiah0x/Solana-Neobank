@@ -3,5 +3,5 @@ builder = "nixpacks"
 buildCommand = "npm install && npx patch-package && npm run build && npx prisma generate"
 
 [deploy]
-startCommand = "node --require ./preload.cjs dist/server.js"
+startCommand = "npx prisma db push && node --require ./preload.cjs dist/server.js"
 restartPolicyType = "on_failure"
