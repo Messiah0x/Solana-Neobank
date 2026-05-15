@@ -25,13 +25,18 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'production',
   logger: {
     error(code, metadata) {
-      console.error('[NEXTAUTH_FULL_ERROR]', code, JSON.stringify(metadata, null, 2));
+      const detail = metadata instanceof Error
+        ? { message: metadata.message, stack: metadata.stack, name: metadata.name }
+        : (metadata as { error?: Error })?.error instanceof Error
+          ? { message: (metadata as { error: Error }).error.message, stack: (metadata as { error: Error }).error.stack }
+          : metadata;
+      console.log('[NEXTAUTH_FULL_ERROR]', code, JSON.stringify(detail));
     },
     warn(code) {
-      console.warn('[NEXTAUTH_WARN]', code);
+      console.log('[NEXTAUTH_WARN]', code);
     },
     debug(code, metadata) {
-      console.log('[NEXTAUTH_DEBUG]', code, JSON.stringify(metadata, null, 2));
+      console.log('[NEXTAUTH_DEBUG]', code, JSON.stringify(metadata));
     },
   },
   cookies: {
