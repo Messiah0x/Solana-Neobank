@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useSolPrice } from '@/lib/useSolPrice';
 
 interface Props {
   usdc: number;
@@ -10,11 +12,18 @@ interface Props {
   hasYield: boolean;
   isLoading: boolean;
   publicKey: string;
+  onAirdrop?: () => void;
 }
 
-export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: Props) {
+type AirdropState = 'idle' | 'loading' | 'success';
+
+export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, onAirdrop }: Props) {
   const [copied, setCopied] = useState(false);
+  const [airdropState, setAirdropState] = useState<AirdropState>('idle');
   const truncated = publicKey ? `${publicKey.slice(0, 4)}···${publicKey.slice(-4)}` : '';
+
+  const solPrice = useSolPrice();
+  const totalUsd = usdc + sol * solPrice;
 
   async function handleCopyAddress() {
     if (!publicKey) return;
@@ -22,6 +31,24 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: 
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
+
+  async function handleAirdrop() {
+    if (!publicKey || airdropState === 'loading') return;
+    setAirdropState('loading');
+    try {
+      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      const pubkey = new PublicKey(publicKey);
+      const sig = await connection.requestAirdrop(pubkey, LAMPORTS_PER_SOL);
+      await connection.confirmTransaction(sig);
+      setAirdropState('success');
+      onAirdrop?.();
+      setTimeout(() => setAirdropState('idle'), 3000);
+    } catch {
+      setAirdropState('idle');
+    }
+  }
+
+  const showAirdropButton = !isLoading && sol < 0.01;
 
   return (
     <div className="px-4 pt-2 pb-1">
@@ -51,32 +78,97 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: 
         <div className="relative p-6">
           {/* Label */}
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3">
-            Total Balance
+            Total Portfolio
           </p>
 
-          {/* Balance number */}
+          {/* Main hero: total USD value */}
           {isLoading ? (
             <div className="h-14 w-48 bg-white/[0.06] rounded-xl animate-pulse mb-1" />
           ) : (
             <AnimatePresence mode="wait">
               <motion.div
-                key={usdc}
+                key={totalUsd.toFixed(2)}
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
                 className="font-mono font-bold text-5xl tracking-tight leading-none mb-1"
               >
-                ${usdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {solPrice > 0
+                  ? `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : `$${usdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               </motion.div>
             </AnimatePresence>
           )}
 
-          <div className="flex items-center gap-2 mb-5">
-            <p className="text-sm text-white/35 font-medium">USDC · Solana</p>
-            {sol > 0 && !isLoading && (
-              <span className="text-xs text-white/20 font-mono">{sol.toFixed(4)} SOL</span>
+          {/* Breakdown row */}
+          <div className="flex items-center gap-3 mb-1">
+            {isLoading ? (
+              <div className="h-4 w-32 bg-white/[0.04] rounded animate-pulse" />
+            ) : (
+              <>
+                <p className="text-sm text-white/35 font-medium">
+                  {usdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
+                </p>
+                {sol > 0 && (
+                  <span className="text-xs text-white/20 font-mono">+ {sol.toFixed(4)} SOL</span>
+                )}
+                {solPrice > 0 && sol > 0 && (
+                  <span className="text-xs text-white/15 font-mono">
+                    (~${(sol * solPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                  </span>
+                )}
+              </>
             )}
           </div>
+
+          {/* Airdrop button — shown when wallet is empty (devnet) */}
+          {showAirdropButton && (
+            <div className="mb-4">
+              <AnimatePresence mode="wait">
+                {airdropState === 'success' ? (
+                  <motion.span
+                    key="success"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="inline-flex items-center gap-1.5 text-xs text-success font-semibold"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    1 SOL added!
+                  </motion.span>
+                ) : (
+                  <motion.button
+                    key="button"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    onClick={handleAirdrop}
+                    disabled={airdropState === 'loading'}
+                    className="inline-flex items-center gap-1.5 text-xs text-accent/70 hover:text-accent font-medium transition-colors disabled:cursor-not-allowed"
+                  >
+                    {airdropState === 'loading' ? (
+                      <>
+                        <span className="w-3 h-3 border border-accent/40 border-t-accent rounded-full animate-spin" />
+                        <span>Requesting SOL…</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Get test SOL
+                      </>
+                    )}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Spacer when no airdrop button */}
+          {!showAirdropButton && <div className="mb-5" />}
 
           {/* Bottom row */}
           <div className="flex items-center justify-between">

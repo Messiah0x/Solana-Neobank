@@ -223,6 +223,7 @@ export default function DashboardPage() {
                 hasYield={yieldData?.hasPosition ?? false}
                 isLoading={balanceLoading}
                 publicKey={walletPublicKey ?? ''}
+                onAirdrop={() => mutateBalance()}
               />
 
               <QuickActions
