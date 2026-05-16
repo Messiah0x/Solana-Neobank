@@ -301,6 +301,18 @@ export default function DashboardPage() {
         />
       )}
 
+      {/* Swap modal */}
+      {showSwapModal && (
+        <SwapModal
+          solBalance={balance?.sol ?? 0}
+          onClose={() => setShowSwapModal(false)}
+          onSuccess={() => {
+            mutateBalance();
+            setShowSwapModal(false);
+          }}
+        />
+      )}
+
       {/* First-time onboarding modal */}
       {showOnboarding && walletPublicKey && userId && (
         <OnboardingModal
