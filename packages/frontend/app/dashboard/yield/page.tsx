@@ -1,12 +1,15 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { getWallet, getWalletBalance, getYieldData, getYieldApy } from '@/lib/api';
+import { DepositModal } from '@/components/yield/DepositModal';
+import { WithdrawModal } from '@/components/yield/WithdrawModal';
+import { getWallet, getWalletBalance, getYieldData, getYieldApy, depositUsdc, withdrawUsdc } from '@/lib/api';
 
 function calcProjections(deposited: number, apy: number) {
   const daily = (deposited * (apy / 100)) / 365;
@@ -34,18 +37,20 @@ function ProjectionCard({ label, value, delay }: { label: string; value: number;
 export default function YieldPage() {
   const { user } = usePrivy();
   const userId = user?.id ?? null;
-  
+
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const { data: wallet } = useSWR(
     userId ? `wallet-${userId}` : null,
     () => getWallet(userId!),
   );
-  const { data: balance } = useSWR(
+  const { data: balance, mutate: mutateBalance } = useSWR(
     wallet ? `balance-${userId}` : null,
     () => getWalletBalance(userId!),
     { refreshInterval: 30_000 },
   );
-  const { data: yieldData, isLoading } = useSWR(
+  const { data: yieldData, isLoading, mutate: mutateYield } = useSWR(
     wallet ? `yield-${userId}` : null,
     () => getYieldData(userId!),
     { refreshInterval: 30_000 },
@@ -59,6 +64,16 @@ export default function YieldPage() {
   const apy = yieldData?.apy ?? liveApy ?? 5.2;
   const proj = calcProjections(deposited, apy);
   const usdcAvailable = balance?.usdc ?? 0;
+
+  async function handleDeposit(amount: number) {
+    await depositUsdc(userId!, amount);
+    await Promise.all([mutateYield(), mutateBalance()]);
+  }
+
+  async function handleWithdraw(amount: number) {
+    await withdrawUsdc(userId!, amount);
+    await Promise.all([mutateYield(), mutateBalance()]);
+  }
 
   return (
     <div className="min-h-dvh bg-background flex">

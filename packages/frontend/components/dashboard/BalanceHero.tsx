@@ -15,11 +15,12 @@ interface Props {
   onAirdrop?: () => void;
 }
 
-type AirdropState = 'idle' | 'loading' | 'success';
+type AirdropState = 'idle' | 'loading' | 'success' | 'error';
 
 export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, onAirdrop }: Props) {
   const [copied, setCopied] = useState(false);
   const [airdropState, setAirdropState] = useState<AirdropState>('idle');
+  const [usdcAirdropState, setUsdcAirdropState] = useState<AirdropState>('idle');
   const truncated = publicKey ? `${publicKey.slice(0, 4)}···${publicKey.slice(-4)}` : '';
 
   const solPrice = useSolPrice();
@@ -48,7 +49,27 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
     }
   }
 
+  async function handleUsdcAirdrop() {
+    if (!publicKey || usdcAirdropState === 'loading') return;
+    setUsdcAirdropState('loading');
+    try {
+      const res = await fetch('https://spl-token-faucet.com/api/token/get', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: publicKey, token: 'USDC' }),
+      });
+      if (!res.ok) throw new Error(`Faucet returned ${res.status}`);
+      setUsdcAirdropState('success');
+      onAirdrop?.();
+      setTimeout(() => setUsdcAirdropState('idle'), 3000);
+    } catch {
+      setUsdcAirdropState('error');
+      setTimeout(() => setUsdcAirdropState('idle'), 3000);
+    }
+  }
+
   const showAirdropButton = !isLoading && sol < 0.01;
+  const showUsdcFaucetButton = !isLoading && usdc < 1;
 
   return (
     <div className="px-4 pt-2 pb-1">
