@@ -66,26 +66,31 @@ export function QuickActions({ onReceive, onSend, onEarn, hasWallet }: Props) {
   return (
     <div className="px-4 pt-4 pb-1">
       <div className="grid grid-cols-4 gap-3">
-        {actions.map((action, i) => (
-          <motion.button
-            key={action.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            whileTap={'onClick' in action && action.onClick && !('disabled' in action && action.disabled) ? { scale: 0.93 } : undefined}
-            onClick={'onClick' in action ? action.onClick : undefined}
-            disabled={'disabled' in action ? action.disabled : false}
-            className={`flex flex-col items-center gap-2.5 p-3.5 rounded-2xl border ${action.bg} ${action.border} transition-all relative ${'disabled' in action && action.disabled ? 'opacity-40 cursor-not-allowed' : 'onClick' in action && action.onClick ? 'hover:opacity-80 cursor-pointer' : ''}`}
-          >
-            <span className={action.color}>{action.icon}</span>
-            <span className={`text-[11px] font-semibold ${action.color}`}>{action.label}</span>
-            {'soon' in action && action.soon && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-background border border-white/10 flex items-center justify-center">
-                <span className="text-[7px] text-white/30 font-bold">•</span>
-              </span>
-            )}
-          </motion.button>
-        ))}
+        {actions.map((action, i) => {
+          const isDisabled = 'disabled' in action ? !!action.disabled : false;
+          const hasClick = 'onClick' in action && !!action.onClick;
+          const isSoon = 'soon' in action && !!action.soon;
+          return (
+            <motion.button
+              key={action.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={hasClick && !isDisabled ? { scale: 0.93 } : undefined}
+              onClick={'onClick' in action ? action.onClick : undefined}
+              disabled={isDisabled}
+              className={`flex flex-col items-center gap-2.5 p-3.5 rounded-2xl border ${action.bg} ${action.border} transition-all relative ${isDisabled ? 'opacity-40 cursor-not-allowed' : hasClick ? 'hover:opacity-80 cursor-pointer' : ''}`}
+            >
+              <span className={action.color}>{action.icon}</span>
+              <span className={`text-[11px] font-semibold ${action.color}`}>{action.label}</span>
+              {isSoon && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-background border border-white/10 flex items-center justify-center">
+                  <span className="text-[7px] text-white/30 font-bold">•</span>
+                </span>
+              )}
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );

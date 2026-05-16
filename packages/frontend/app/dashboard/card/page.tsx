@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -80,11 +80,35 @@ function ControlButton({ icon, label, active, onClick, disabled }: ControlButton
 
 export default function CardPage() {
   const { user } = usePrivy();
+  const { wallets } = useSolanaWallets();
   const { name } = getPrivyUserInfo(user ?? null);
   const [frozen, setFrozen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const displayName = name.toUpperCase() || 'AVANOR MEMBER';
+
+  // Use the last 4 chars of the wallet address as the card's last 4 digits.
+  // Fall back to a fixed placeholder so the card always looks complete.
+  const walletAddress = wallets[0]?.address ?? '';
+  const last4 = walletAddress.length >= 4
+    ? walletAddress.slice(-4).toUpperCase()
+    : '4242';
+
+  // Full card number uses the last4 derived from wallet address
+  const fullCardNumber = `4242  4242  4242  ${last4}`;
+  const maskedCardNumber = `••••  ••••  ••••  ${last4}`;
+
+  async function handleCopy() {
+    if (frozen) return;
+    try {
+      await navigator.clipboard.writeText(fullCardNumber.replace(/\s/g, ''));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard not available
+    }
+  }
 
   return (
     <div className="min-h-dvh bg-background flex">
@@ -104,12 +128,20 @@ export default function CardPage() {
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative rounded-3xl overflow-hidden mb-5"
+              className="relative rounded-3xl overflow-hidden mb-3"
               style={{
-                background: 'linear-gradient(145deg, #1C1610 0%, #130F0A 40%, #0A0A0A 100%)',
-                border: '1px solid rgba(212,175,127,0.18)',
-                boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(212,175,127,0.1) inset',
+                background: frozen
+                  ? 'linear-gradient(145deg, #181818 0%, #111111 40%, #0A0A0A 100%)'
+                  : 'linear-gradient(145deg, #1C1610 0%, #130F0A 40%, #0A0A0A 100%)',
+                border: frozen
+                  ? '1px solid rgba(255,255,255,0.08)'
+                  : '1px solid rgba(212,175,127,0.18)',
+                boxShadow: frozen
+                  ? '0 32px 64px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.04) inset'
+                  : '0 32px 64px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(212,175,127,0.1) inset',
                 aspectRatio: '1.586',
+                filter: frozen ? 'grayscale(1) brightness(0.65)' : 'none',
+                transition: 'filter 0.4s ease, background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease',
               }}
             >
               <div
@@ -146,7 +178,7 @@ export default function CardPage() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {showDetails ? '4242  4242  4242  4242' : '••••  ••••  ••••  4242'}
+                        {showDetails ? fullCardNumber : maskedCardNumber}
                       </motion.span>
                     </AnimatePresence>
                   </div>
@@ -161,7 +193,7 @@ export default function CardPage() {
                     </div>
                     <div className="text-center">
                       <p className="text-[9px] text-white/30 uppercase tracking-widest mb-0.5">CVV</p>
-                      <p className="text-xs font-mono font-semibold text-white/65">{showDetails ? '737' : '•••'}</p>
+                      <p className="text-xs font-mono font-semibold text-white/65">•••</p>
                     </div>
                     <VisaWordmark />
                   </div>
@@ -176,18 +208,54 @@ export default function CardPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-                    style={{ background: 'rgba(10,10,10,0.85)', backdropFilter: 'blur(8px)' }}
+                    style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(6px)' }}
                   >
                     <div className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.04]">
                       <svg className="w-7 h-7 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18m0-18l-3 3m3-3l3 3M3 12h18m-18 0l3-3m-3 3l3 3m12-3l-3-3m3 3l-3 3" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-white/50 tracking-wide">Card Frozen</p>
-                    <p className="text-xs text-white/25">Tap Freeze to restore</p>
+                    <p className="text-sm font-semibold text-white/60 tracking-wide">Card Frozen</p>
+                    <p className="text-xs text-white/30">All transactions paused</p>
                   </motion.div>
                 )}
               </AnimatePresence>
+            </motion.div>
+
+            {/* Copy card number row */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08, duration: 0.35 }}
+              className="flex justify-end mb-4"
+            >
+              <button
+                onClick={handleCopy}
+                disabled={frozen}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold tracking-wide transition-all duration-200 ${
+                  frozen
+                    ? 'text-white/15 cursor-not-allowed'
+                    : copied
+                    ? 'text-accent bg-accent/10'
+                    : 'text-white/35 hover:text-accent/70 hover:bg-white/[0.04]'
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                    </svg>
+                    Copy card number
+                  </>
+                )}
+              </button>
             </motion.div>
 
             {/* Controls */}
@@ -213,16 +281,26 @@ export default function CardPage() {
                 label={showDetails ? 'Hide' : 'Details'}
                 active={showDetails}
                 onClick={() => setShowDetails(!showDetails)}
+                disabled={frozen}
               />
               <ControlButton
                 icon={
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18m0-18l-3 3m3-3l3 3M3 12h18m-18 0l3-3m-3 3l3 3m12-3l-3-3m3 3l-3 3" />
-                  </svg>
+                  frozen ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18m0-18l-3 3m3-3l3 3M3 12h18m-18 0l3-3m-3 3l3 3m12-3l-3-3m3 3l-3 3" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18m0-18l-3 3m3-3l3 3M3 12h18m-18 0l3-3m-3 3l3 3m12-3l-3-3m3 3l-3 3" />
+                    </svg>
+                  )
                 }
                 label={frozen ? 'Unfreeze' : 'Freeze'}
                 active={frozen}
-                onClick={() => setFrozen(!frozen)}
+                onClick={() => {
+                  setFrozen(!frozen);
+                  if (!frozen) setShowDetails(false);
+                }}
               />
               <ControlButton
                 icon={
@@ -244,7 +322,7 @@ export default function CardPage() {
               />
             </motion.div>
 
-            {/* Coming soon notice */}
+            {/* Premium launch notice */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -262,9 +340,17 @@ export default function CardPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-accent/90">Physical & virtual Visa cards — coming soon</p>
-                  <p className="text-xs text-white/30 mt-1 leading-relaxed">
-                    Spend your Solana balance anywhere Visa is accepted. Zero FX fees. Real-time spending notifications.
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-semibold text-accent/90">Virtual card</p>
+                    <span
+                      className="text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide"
+                      style={{ background: 'rgba(212,175,127,0.12)', color: 'rgba(212,175,127,0.7)', border: '1px solid rgba(212,175,127,0.2)' }}
+                    >
+                      Coming Q3 2026
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/30 leading-relaxed">
+                    Spend your Solana balance anywhere Visa is accepted. Zero FX fees, instant settlement, real-time notifications.
                   </p>
                 </div>
               </div>
@@ -295,15 +381,36 @@ export default function CardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.4 }}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3">Card Transactions</p>
-              <div className="rounded-2xl border border-white/[0.06] bg-surface/30 py-12 px-6 flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-white/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                  </svg>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3">Transactions</p>
+              <div
+                className="rounded-2xl border border-white/[0.06] py-12 px-6 flex flex-col items-center text-center"
+                style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)' }}
+              >
+                {/* Decorative card illustration */}
+                <div className="relative mb-5">
+                  <div
+                    className="w-16 h-10 rounded-xl border"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(212,175,127,0.08) 0%, rgba(212,175,127,0.03) 100%)',
+                      border: '1px solid rgba(212,175,127,0.15)',
+                    }}
+                  />
+                  <div
+                    className="absolute -bottom-1.5 -right-1.5 w-16 h-10 rounded-xl border"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }}
+                  />
+                  <div className="absolute top-2 left-2.5 flex gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent/25" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent/15" />
+                  </div>
                 </div>
-                <p className="text-sm font-semibold text-white/30">No transactions yet</p>
-                <p className="text-xs text-white/20 mt-1">Card transactions will appear here</p>
+                <p className="text-sm font-semibold text-white/30">No card transactions yet</p>
+                <p className="text-xs text-white/18 mt-1.5 leading-relaxed">
+                  Fund your account to get started
+                </p>
               </div>
             </motion.div>
 

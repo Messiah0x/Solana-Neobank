@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { WalletCard } from '@/components/wallet/WalletCard';
 import { ReceiveModal } from '@/components/wallet/ReceiveModal';
+import { SendModal } from '@/components/wallet/SendModal';
 import { YieldCard } from '@/components/yield/YieldCard';
 import { BalanceHero } from '@/components/dashboard/BalanceHero';
 import { QuickActions } from '@/components/dashboard/QuickActions';
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [syncFailed, setSyncFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
@@ -229,6 +231,7 @@ export default function DashboardPage() {
               <QuickActions
                 hasWallet={hasWallet}
                 onReceive={() => setShowReceiveModal(true)}
+                onSend={() => setShowSendModal(true)}
                 onEarn={() => router.push('/dashboard/yield')}
               />
 
@@ -263,6 +266,18 @@ export default function DashboardPage() {
         <ReceiveModal
           publicKey={walletPublicKey}
           onClose={() => setShowReceiveModal(false)}
+        />
+      )}
+
+      {/* Send modal */}
+      {showSendModal && (
+        <SendModal
+          usdcBalance={balance?.usdc ?? 0}
+          onClose={() => setShowSendModal(false)}
+          onSuccess={() => {
+            setShowSendModal(false);
+            mutateBalance();
+          }}
         />
       )}
     </div>
