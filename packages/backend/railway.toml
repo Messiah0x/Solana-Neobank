@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install && npx patch-package && npm run build && npx prisma generate"
+buildCommand = "npm install && npx patch-package && npx prisma generate && npm run build"
 
 [deploy]
 startCommand = "npx prisma db push && node --require ./preload.cjs dist/server.js"

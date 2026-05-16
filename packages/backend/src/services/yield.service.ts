@@ -17,6 +17,12 @@ const SECONDS_PER_YEAR = 365.25 * 24 * 3600;
 async function getUserKeypair(dbUserId: string): Promise<Keypair> {
   const wallet = await prisma.wallet.findUnique({ where: { userId: dbUserId } });
   if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
+  if (!wallet.encryptedKey || !wallet.keyIv || !wallet.keyTag) {
+    throw Object.assign(
+      new Error('Wallet managed by Privy — client-side signing required'),
+      { code: 'CLIENT_SIGN_REQUIRED' },
+    );
+  }
   const secretKey = decryptPrivateKey(wallet.encryptedKey, wallet.keyIv, wallet.keyTag);
   return Keypair.fromSecretKey(secretKey);
 }

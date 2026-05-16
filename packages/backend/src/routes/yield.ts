@@ -15,6 +15,7 @@ const withdrawBody = z.object({
 function handleError(err: unknown, reply: FastifyReply) {
   const error = err as Error & { code?: string };
   if (error.code === 'NOT_FOUND') return reply.code(404).send({ success: false, error: error.message });
+  if (error.code === 'CLIENT_SIGN_REQUIRED') return reply.code(422).send({ success: false, error: error.message, code: 'CLIENT_SIGN_REQUIRED' });
   reply.log.error(err);
   return reply.code(500).send({ success: false, error: 'Internal server error' });
 }
