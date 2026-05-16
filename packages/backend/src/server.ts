@@ -21,16 +21,13 @@ async function build() {
     .map((o) => o.trim());
 
   await server.register(cors, {
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // server-to-server
-      const ok =
-        allowedOrigins.some((allowed) => origin === allowed) ||
-        origin.endsWith('.vercel.app') ||
-        origin === 'http://localhost:3000';
-      cb(null, ok);
-    },
+    origin: true, // reflect request origin — allows all origins while keeping credentials
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type'],
+    preflight: true,
+    strictPreflight: false,
   });
 
   await server.register(walletRoutes, { prefix: '/api/wallet' });
