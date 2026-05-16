@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 
 interface Props {
   onReceive?: () => void;
+  onSend?: () => void;
   onEarn?: () => void;
   hasWallet?: boolean;
 }
 
-export function QuickActions({ onReceive, onEarn, hasWallet }: Props) {
+export function QuickActions({ onReceive, onSend, onEarn, hasWallet }: Props) {
   const actions = [
     {
       label: 'Receive',
@@ -25,10 +26,11 @@ export function QuickActions({ onReceive, onEarn, hasWallet }: Props) {
     },
     {
       label: 'Send',
-      color: 'text-white/50',
-      bg: 'bg-white/[0.04]',
-      border: 'border-white/[0.08]',
-      soon: true,
+      color: hasWallet ? 'text-white/70' : 'text-white/30',
+      bg: hasWallet ? 'bg-white/[0.06]' : 'bg-white/[0.04]',
+      border: hasWallet ? 'border-white/[0.12]' : 'border-white/[0.08]',
+      onClick: hasWallet ? onSend : undefined,
+      disabled: !hasWallet,
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -59,7 +61,7 @@ export function QuickActions({ onReceive, onEarn, hasWallet }: Props) {
         </svg>
       ),
     },
-  ] as const;
+  ];
 
   return (
     <div className="px-4 pt-4 pb-1">
