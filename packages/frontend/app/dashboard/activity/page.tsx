@@ -64,17 +64,27 @@ function TxIcon({ status }: { status: 'success' | 'failed' }) {
 
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
   const short = `${tx.signature.slice(0, 8)}···${tx.signature.slice(-6)}`;
+  const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
+
   return (
-    <motion.div
+    <motion.a
+      href={explorerUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.25 }}
-      className="flex items-center gap-3.5 py-3.5 border-b border-white/[0.04] last:border-0 group cursor-pointer"
+      className="flex items-center gap-3.5 py-3.5 border-b border-white/[0.04] last:border-0 group cursor-pointer hover:bg-white/[0.02] -mx-4 px-4 transition-colors"
     >
       <TxIcon status={tx.status} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">On-chain Transaction</p>
-        <p className="text-xs text-white/25 font-mono mt-0.5 truncate">{short}</p>
+        <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5">
+          On-chain Transaction
+          <svg className="w-3 h-3 text-white/20 group-hover:text-accent/50 transition-colors opacity-0 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </p>
+        <p className="text-xs text-white/25 font-mono mt-0.5 truncate group-hover:text-white/40 transition-colors">{short}</p>
       </div>
       <div className="text-right flex-shrink-0">
         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
@@ -86,7 +96,7 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
           <p className="text-[10px] text-white/20 mt-1.5 tabular-nums">{formatTime(tx.timestamp)}</p>
         )}
       </div>
-    </motion.div>
+    </motion.a>
   );
 }
 

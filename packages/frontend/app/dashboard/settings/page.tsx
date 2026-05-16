@@ -232,8 +232,13 @@ export default function SettingsPage() {
                 />
                 <SettingsRow
                   label="Wallet Keys"
-                  value="Server-side encrypted"
-                  sub="AES-256 · Never exposed to frontend"
+                  value="Privy MPC Enclave"
+                  sub="Non-custodial · Private key never touches our servers"
+                />
+                <SettingsRow
+                  label="Key Custody"
+                  value="User-controlled"
+                  sub="Privy's secure enclave · You hold your keys"
                 />
               </div>
             </motion.div>

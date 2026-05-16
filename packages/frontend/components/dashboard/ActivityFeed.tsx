@@ -28,6 +28,8 @@ function timeAgo(ms: number): string {
 
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
   const short = `${tx.signature.slice(0, 6)}···${tx.signature.slice(-4)}`;
+  const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -8 }}
@@ -51,7 +53,18 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white truncate">Transaction</p>
-        <p className="text-xs text-white/30 font-mono mt-0.5">{short}</p>
+        <a
+          href={explorerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-white/30 font-mono mt-0.5 hover:text-accent/70 transition-colors inline-flex items-center gap-1 group"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {short}
+          <svg className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </a>
       </div>
 
       <div className="text-right flex-shrink-0">
@@ -74,7 +87,7 @@ export function ActivityFeed({ transactions, isLoading, hasWallet }: Props) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-heading font-bold text-base">Activity</h2>
         {transactions && transactions.length > 0 && (
-          <button className="text-xs text-accent font-semibold">View all</button>
+          <span className="text-xs text-white/25 font-medium">{transactions.length} recent</span>
         )}
       </div>
 

@@ -4,4 +4,5 @@ buildCommand = "npm install && npx patch-package && npx prisma generate && npm r
 
 [deploy]
 startCommand = "npx prisma db push && node --require ./preload.cjs dist/server.js"
+healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -12,7 +13,15 @@ interface Props {
 }
 
 export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: Props) {
+  const [copied, setCopied] = useState(false);
   const truncated = publicKey ? `${publicKey.slice(0, 4)}···${publicKey.slice(-4)}` : '';
+
+  async function handleCopyAddress() {
+    if (!publicKey) return;
+    await navigator.clipboard.writeText(publicKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div className="px-4 pt-2 pb-1">
@@ -61,7 +70,13 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: 
               </motion.div>
             </AnimatePresence>
           )}
-          <p className="text-sm text-white/35 font-medium mb-5">USDC · Solana</p>
+
+          <div className="flex items-center gap-2 mb-5">
+            <p className="text-sm text-white/35 font-medium">USDC · Solana</p>
+            {sol > 0 && !isLoading && (
+              <span className="text-xs text-white/20 font-mono">{sol.toFixed(4)} SOL</span>
+            )}
+          </div>
 
           {/* Bottom row */}
           <div className="flex items-center justify-between">
@@ -77,12 +92,43 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey }: 
               </div>
             )}
 
-            {/* Wallet address */}
+            {/* Wallet address — click to copy */}
             {publicKey && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-success" />
-                <span className="font-mono text-xs text-white/30">{truncated}</span>
-              </div>
+              <button
+                onClick={handleCopyAddress}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-white/[0.05] transition-all group"
+              >
+                <AnimatePresence mode="wait">
+                  {copied ? (
+                    <motion.span
+                      key="check"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <svg className="w-3 h-3 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      <span className="font-mono text-xs text-success font-semibold">Copied!</span>
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="address"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                      <span className="font-mono text-xs text-white/30 group-hover:text-white/50 transition-colors">{truncated}</span>
+                      <svg className="w-2.5 h-2.5 text-white/20 group-hover:text-white/40 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                      </svg>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
             )}
           </div>
         </div>

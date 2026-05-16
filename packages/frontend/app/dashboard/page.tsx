@@ -9,6 +9,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { WalletCard } from '@/components/wallet/WalletCard';
+import { ReceiveModal } from '@/components/wallet/ReceiveModal';
 import { YieldCard } from '@/components/yield/YieldCard';
 import { BalanceHero } from '@/components/dashboard/BalanceHero';
 import { QuickActions } from '@/components/dashboard/QuickActions';
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const [syncing, setSyncing] = useState(false);
   const [walletChecked, setWalletChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
@@ -48,7 +50,6 @@ export default function DashboardPage() {
     if (!userId || !privyPublicKey) return;
     setSyncing(true);
     try {
-      // Try to fetch existing wallet from backend first
       try {
         const w = await getWallet(userId);
         setWalletPublicKey(w.publicKey);
@@ -127,9 +128,14 @@ export default function DashboardPage() {
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mx-4 mt-3 px-4 py-3 rounded-xl border border-error/20 bg-error/10 text-error text-sm"
+              className="mx-4 mt-3 px-4 py-3 rounded-xl border border-error/20 bg-error/10 text-error text-sm flex items-center justify-between gap-3"
             >
-              {error}
+              <span>{error}</span>
+              <button onClick={() => setError(null)} className="text-error/60 hover:text-error transition-colors flex-shrink-0">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </motion.div>
           )}
 
@@ -162,7 +168,11 @@ export default function DashboardPage() {
                 publicKey={walletPublicKey ?? ''}
               />
 
-              <QuickActions />
+              <QuickActions
+                hasWallet={hasWallet}
+                onReceive={() => setShowReceiveModal(true)}
+                onEarn={() => router.push('/dashboard/yield')}
+              />
 
               <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-6 lg:mt-4">
                 <div className="px-4 pt-4 pb-1 lg:px-0 lg:pt-0 lg:pb-0 lg:order-2">
@@ -189,6 +199,14 @@ export default function DashboardPage() {
       </div>
 
       <MobileNav />
+
+      {/* Receive modal */}
+      {showReceiveModal && walletPublicKey && (
+        <ReceiveModal
+          publicKey={walletPublicKey}
+          onClose={() => setShowReceiveModal(false)}
+        />
+      )}
     </div>
   );
 }
