@@ -69,9 +69,11 @@ export default function DashboardPage() {
         const w = await registerWallet(userId, pubkey);
         setWalletPublicKey(w.publicKey);
       }
-    } catch {
-      // Network/CORS failure — don't show scary error, let user retry
+    } catch (err) {
+      // Surface the actual error so we can diagnose — shown in "Connect Wallet" card
+      console.error('[syncWallet]', err);
       setSyncFailed(true);
+      setError(err instanceof Error ? err.message : 'Failed to connect wallet');
     } finally {
       setSyncing(false);
       setWalletChecked(true);
