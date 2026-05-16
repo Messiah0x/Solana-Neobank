@@ -73,8 +73,6 @@ function enrichTransaction(
   const myPost = post.find((b) => accountKeys[b.accountIndex] === publicKey || b.owner === publicKey);
 
   if (myPre || myPost) {
-    const preAmt = Number(myPre?.uiTokenAmount?.uiAmount ?? myPre?.uiTokenAmount?.amount ?? 0) / (myPre ? 1 : 1);
-    const postAmt = Number(myPost?.uiTokenAmount?.uiAmount ?? myPost?.uiTokenAmount?.amount ?? 0) / (myPost ? 1 : 1);
     // uiAmount is already decimal-adjusted when present
     const preVal = myPre?.uiTokenAmount?.uiAmount ?? (Number(myPre?.uiTokenAmount?.amount ?? 0) / 10 ** USDC_DECIMALS);
     const postVal = myPost?.uiTokenAmount?.uiAmount ?? (Number(myPost?.uiTokenAmount?.amount ?? 0) / 10 ** USDC_DECIMALS);

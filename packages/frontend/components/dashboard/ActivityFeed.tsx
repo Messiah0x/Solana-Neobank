@@ -29,9 +29,29 @@ function timeAgo(ms: number): string {
   return `${days}d ago`;
 }
 
+function formatAmount(amount: number | null, type: 'sent' | 'received' | 'other'): string | null {
+  if (amount === null || amount === 0) return null;
+  const sign = type === 'received' ? '+' : type === 'sent' ? '-' : '';
+  const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  const unit = Number.isInteger(amount) || (amount * 100) % 1 === 0 ? 'USDC' : 'SOL';
+  return `${sign}${formatted} ${unit}`;
+}
+
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
   const short = `${tx.signature.slice(0, 6)}···${tx.signature.slice(-4)}`;
+  const counterpartyShort = tx.counterparty
+    ? `${tx.counterparty.slice(0, 6)}···${tx.counterparty.slice(-4)}`
+    : null;
   const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
+  const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
+  const amountStr = formatAmount(tx.amount, tx.type);
+  const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';
+
+  const iconBg = tx.type === 'received'
+    ? 'bg-success/10 border border-success/20'
+    : tx.type === 'sent'
+    ? 'bg-error/10 border border-error/20'
+    : 'bg-white/[0.05] border border-white/10';
 
   return (
     <motion.div
@@ -40,22 +60,24 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
       transition={{ delay: index * 0.04, duration: 0.3 }}
       className="flex items-center gap-3.5 py-3.5 border-b border-white/[0.04] last:border-0"
     >
-      <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-        tx.status === 'success' ? 'bg-success/10 border border-success/20' : 'bg-error/10 border border-error/20'
-      }`}>
-        {tx.status === 'success' ? (
+      <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        {tx.type === 'received' ? (
           <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+          </svg>
+        ) : tx.type === 'sent' ? (
+          <svg className="w-4 h-4 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
           </svg>
         ) : (
-          <svg className="w-4 h-4 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-4 h-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01" />
           </svg>
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white truncate">Transaction</p>
+        <p className="text-sm font-semibold text-white truncate">{label}</p>
         <a
           href={explorerUrl}
           target="_blank"
@@ -63,7 +85,7 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
           className="text-xs text-white/30 font-mono mt-0.5 hover:text-accent/70 transition-colors inline-flex items-center gap-1 group"
           onClick={(e) => e.stopPropagation()}
         >
-          {short}
+          {counterpartyShort ?? short}
           <svg className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>
@@ -71,11 +93,15 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
       </div>
 
       <div className="text-right flex-shrink-0">
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-          tx.status === 'success' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
-        }`}>
-          {tx.status}
-        </span>
+        {amountStr ? (
+          <p className={`text-sm font-semibold tabular-nums ${amountColor}`}>{amountStr}</p>
+        ) : (
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+            tx.status === 'success' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
+          }`}>
+            {tx.status}
+          </span>
+        )}
         {tx.timestamp && (
           <p className="text-[10px] text-white/25 mt-1">{timeAgo(tx.timestamp)}</p>
         )}
