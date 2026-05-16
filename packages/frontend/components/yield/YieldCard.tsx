@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { YieldTicker } from './YieldTicker';
 import { DepositModal } from './DepositModal';
-import { depositUsdc } from '@/lib/api';
+import { WithdrawModal } from './WithdrawModal';
+import { depositUsdc, withdrawUsdc } from '@/lib/api';
 
 interface YieldData {
   hasPosition: boolean;
@@ -44,6 +45,7 @@ function StatRow({
 
 export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDepositSuccess }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
 
   const apy = yieldData?.apy ?? 8.4;
   const hasPosition = yieldData?.hasPosition ?? false;
@@ -55,6 +57,11 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
 
   async function handleDeposit(amount: number) {
     await depositUsdc(userId, amount);
+    onDepositSuccess();
+  }
+
+  async function handleWithdraw(amount: number) {
+    await withdrawUsdc(userId, amount);
     onDepositSuccess();
   }
 
@@ -141,11 +148,21 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
             </div>
 
             {/* Withdraw */}
-            <button className="mt-5 w-full py-2.5 rounded-xl border border-white/[0.08] text-white/40 hover:text-white/60 hover:border-white/15 transition-all text-sm font-semibold">
+            <button
+              onClick={() => setWithdrawModalOpen(true)}
+              className="mt-5 w-full py-2.5 rounded-xl border border-white/[0.08] text-white/40 hover:text-white/60 hover:border-white/15 transition-all text-sm font-semibold"
+            >
               Withdraw Funds
             </button>
           </div>
         </motion.div>
+
+        <WithdrawModal
+          isOpen={withdrawModalOpen}
+          onClose={() => setWithdrawModalOpen(false)}
+          onConfirm={handleWithdraw}
+          depositedAmount={depositedAmount}
+        />
       </>
     );
   }
