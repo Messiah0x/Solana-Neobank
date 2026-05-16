@@ -134,9 +134,10 @@ export default function DashboardPage() {
   const hasWallet = !!walletPublicKey;
   // Show "create wallet" screen only if user has no Privy wallet at all
   const needsWalletCreation = walletChecked && !privyPublicKey && !walletPublicKey;
-  // Show "connecting" retry UI if Privy wallet exists but sync failed
-  const needsSync = walletChecked && !!privyPublicKey && !walletPublicKey && syncFailed;
-  const isLoading = !ready || (!walletChecked && authenticated);
+  // Show "connecting" card whenever Privy wallet exists but backend not yet synced
+  const needsSync = !!privyPublicKey && !walletPublicKey;
+  // Initial spinner: before we know anything (no Privy wallet detected yet, still loading)
+  const isLoading = !ready || (!walletChecked && !privyPublicKey && authenticated);
 
   return (
     <div className="min-h-dvh bg-background flex">
@@ -161,7 +162,7 @@ export default function DashboardPage() {
             </motion.div>
           )}
 
-          {isLoading || syncing ? (
+          {isLoading ? (
             <div className="px-4 pt-4 space-y-3">
               <div className="rounded-3xl border border-white/[0.06] bg-surface/30 h-44 animate-pulse" />
               <div className="grid grid-cols-4 gap-3 pt-1">
@@ -171,7 +172,7 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : needsSync ? (
-            /* Privy wallet exists but backend sync failed — show retry UI */
+            /* Privy wallet detected — syncing or waiting to retry */
             <div className="px-4 pt-5 lg:pt-10 lg:px-10">
               <div className="max-w-md">
                 <motion.div
@@ -180,17 +181,26 @@ export default function DashboardPage() {
                   className="rounded-2xl border border-white/[0.06] bg-surface/30 p-6 text-center"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-5 h-5 text-accent/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                    </svg>
+                    {syncing ? (
+                      <span className="w-5 h-5 border-2 border-accent/30 border-t-accent rounded-full animate-spin block" />
+                    ) : (
+                      <svg className="w-5 h-5 text-accent/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                      </svg>
+                    )}
                   </div>
-                  <p className="text-sm font-semibold text-white/70 mb-1">Connecting your wallet</p>
-                  <p className="text-xs text-white/30 mb-5">Your Privy wallet is ready. Tap below to connect it to your account.</p>
+                  <p className="text-sm font-semibold text-white/70 mb-1">
+                    {syncing ? 'Connecting…' : 'Connecting your wallet'}
+                  </p>
+                  <p className="text-xs text-white/30 mb-5">
+                    {syncing ? 'Linking your Privy wallet to your account.' : 'Your Privy wallet is ready. Tap below to connect it to your account.'}
+                  </p>
                   <button
                     onClick={() => syncWallet()}
-                    className="w-full py-3 rounded-xl bg-accent text-background text-sm font-semibold hover:bg-accent/90 transition-colors"
+                    disabled={syncing}
+                    className="w-full py-3 rounded-xl bg-accent text-background text-sm font-semibold hover:bg-accent/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
-                    Connect Wallet
+                    {syncing ? 'Connecting…' : 'Connect Wallet'}
                   </button>
                 </motion.div>
               </div>
@@ -202,16 +212,6 @@ export default function DashboardPage() {
                   Get started
                 </p>
                 <WalletCard onCreateWallet={handleCreateWallet} creating={creating} />
-              </div>
-            </div>
-          ) : !hasWallet ? (
-            /* Privy wallet loading / not yet checked */
-            <div className="px-4 pt-4 space-y-3">
-              <div className="rounded-3xl border border-white/[0.06] bg-surface/30 h-44 animate-pulse" />
-              <div className="grid grid-cols-4 gap-3 pt-1">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="rounded-2xl bg-white/[0.04] h-20 animate-pulse" />
-                ))}
               </div>
             </div>
           ) : (
