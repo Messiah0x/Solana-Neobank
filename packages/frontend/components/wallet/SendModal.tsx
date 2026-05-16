@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSolanaWallets } from '@privy-io/react-auth';
+import { useToast } from '@/lib/useToast';
 import {
   Connection,
   PublicKey,
@@ -44,6 +45,7 @@ function isValidPublicKey(value: string): boolean {
 export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
   const { wallets } = useSolanaWallets();
   const wallet = wallets[0] ?? null;
+  const { toast } = useToast();
 
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -122,11 +124,13 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
 
       setTxSig(sig);
       setPhase('success');
+      toast.success(`Sent ${amountNum} USDC successfully`);
       onSuccess?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
       setErrorMsg(msg);
       setPhase('error');
+      toast.error(`Send failed: ${msg}`);
     }
   }
 

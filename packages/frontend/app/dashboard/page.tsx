@@ -11,10 +11,12 @@ import { MobileNav } from '@/components/layout/MobileNav';
 import { WalletCard } from '@/components/wallet/WalletCard';
 import { ReceiveModal } from '@/components/wallet/ReceiveModal';
 import { SendModal } from '@/components/wallet/SendModal';
+import { SwapModal } from '@/components/wallet/SwapModal';
 import { YieldCard } from '@/components/yield/YieldCard';
 import { BalanceHero } from '@/components/dashboard/BalanceHero';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import {
   registerWallet,
   getWallet,
@@ -40,6 +42,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  // Track whether we have already evaluated onboarding for this session
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
@@ -83,6 +89,19 @@ export default function DashboardPage() {
         .finally(() => setWalletChecked(true));
     }
   }, [userId, privyPublicKey, ready, syncWallet]);
+
+  // Show onboarding the first time walletPublicKey becomes available (and it hasn't been dismissed)
+  useEffect(() => {
+    if (walletPublicKey && !onboardingChecked) {
+      setOnboardingChecked(true);
+      const alreadyOnboarded = typeof window !== 'undefined'
+        ? localStorage.getItem('avanor_onboarded')
+        : '1';
+      if (!alreadyOnboarded) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [walletPublicKey, onboardingChecked]);
 
   const { data: balance, isLoading: balanceLoading, mutate: mutateBalance } = useSWR(
     walletPublicKey && userId ? `balance-${userId}` : null,
@@ -233,6 +252,7 @@ export default function DashboardPage() {
                 onReceive={() => setShowReceiveModal(true)}
                 onSend={() => setShowSendModal(true)}
                 onEarn={() => router.push('/dashboard/yield')}
+                onSwap={() => setShowSwapModal(true)}
               />
 
               <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-6 lg:mt-4">
@@ -278,6 +298,16 @@ export default function DashboardPage() {
             setShowSendModal(false);
             mutateBalance();
           }}
+        />
+      )}
+
+      {/* First-time onboarding modal */}
+      {showOnboarding && walletPublicKey && userId && (
+        <OnboardingModal
+          publicKey={walletPublicKey}
+          userId={userId}
+          apy={yieldData?.apy ?? 8.4}
+          onComplete={() => setShowOnboarding(false)}
         />
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { useToast } from '@/lib/useToast';
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { toast } = useToast();
 
   const parsedAmount = parseFloat(amount) || 0;
   const isValid = parsedAmount > 0 && parsedAmount <= depositedAmount;
@@ -34,11 +36,14 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
     try {
       await onConfirm(parsedAmount);
       setSuccess(true);
+      toast.success(`Withdrew $${parsedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC successfully`);
       setTimeout(() => {
         handleClose();
       }, 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Withdrawal failed');
+      const msg = err instanceof Error ? err.message : 'Withdrawal failed';
+      setError(msg);
+      toast.error(`Withdrawal failed: ${msg}`);
     } finally {
       setSubmitting(false);
     }

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Inter } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
 import { PrivyAuthProvider } from '@/components/providers/PrivyAuthProvider';
+import { ToastProvider } from '@/components/ui/ToastProvider';
 import './globals.css';
 
 const spaceGrotesk = Space_Grotesk({
@@ -37,7 +38,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${spaceGrotesk.variable} ${inter.variable} ${GeistMono.variable}`}
     >
       <body className="bg-background text-white antialiased">
-          <PrivyAuthProvider>{children}</PrivyAuthProvider>
+          <PrivyAuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </PrivyAuthProvider>
         </body>
     </html>
   );

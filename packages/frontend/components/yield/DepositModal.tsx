@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { useToast } from '@/lib/useToast';
 
 interface Props {
   isOpen: boolean;
@@ -23,6 +24,7 @@ function ProjectionRow({ label, value }: { label: string; value: string }) {
 export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const amount = usdcBalance;
   const dailyYield = (amount * (apy / 100)) / 365;
@@ -34,9 +36,12 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
     setError(null);
     try {
       await onConfirm(amount);
+      toast.success(`Deposited $${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC — now earning ${apy.toFixed(1)}% APY`);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Transaction failed');
+      const msg = err instanceof Error ? err.message : 'Transaction failed';
+      setError(msg);
+      toast.error(`Deposit failed: ${msg}`);
     } finally {
       setConfirming(false);
     }
