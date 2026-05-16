@@ -142,54 +142,119 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
             )}
           </div>
 
-          {/* Airdrop button — shown when wallet is empty (devnet) */}
-          {showAirdropButton && (
-            <div className="mb-4">
-              <AnimatePresence mode="wait">
-                {airdropState === 'success' ? (
-                  <motion.span
-                    key="success"
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="inline-flex items-center gap-1.5 text-xs text-success font-semibold"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    1 SOL added!
-                  </motion.span>
-                ) : (
-                  <motion.button
-                    key="button"
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    onClick={handleAirdrop}
-                    disabled={airdropState === 'loading'}
-                    className="inline-flex items-center gap-1.5 text-xs text-accent/70 hover:text-accent font-medium transition-colors disabled:cursor-not-allowed"
-                  >
-                    {airdropState === 'loading' ? (
-                      <>
-                        <span className="w-3 h-3 border border-accent/40 border-t-accent rounded-full animate-spin" />
-                        <span>Requesting SOL…</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Get test SOL
-                      </>
-                    )}
-                  </motion.button>
-                )}
-              </AnimatePresence>
+          {/* Faucet buttons — shown when balances are low (devnet) */}
+          {(showAirdropButton || showUsdcFaucetButton) && (
+            <div className="mb-4 flex items-center gap-4 flex-wrap">
+              {/* SOL airdrop button */}
+              {showAirdropButton && (
+                <AnimatePresence mode="wait">
+                  {airdropState === 'success' ? (
+                    <motion.span
+                      key="sol-success"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="inline-flex items-center gap-1.5 text-xs text-success font-semibold"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      1 SOL added!
+                    </motion.span>
+                  ) : (
+                    <motion.button
+                      key="sol-button"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      onClick={handleAirdrop}
+                      disabled={airdropState === 'loading'}
+                      className="inline-flex items-center gap-1.5 text-xs text-accent/70 hover:text-accent font-medium transition-colors disabled:cursor-not-allowed"
+                    >
+                      {airdropState === 'loading' ? (
+                        <>
+                          <span className="w-3 h-3 border border-accent/40 border-t-accent rounded-full animate-spin" />
+                          <span>Requesting SOL…</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                          Get test SOL
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              )}
+
+              {/* Divider when both buttons visible */}
+              {showAirdropButton && showUsdcFaucetButton && (
+                <span className="text-white/15 text-xs select-none">·</span>
+              )}
+
+              {/* USDC faucet button */}
+              {showUsdcFaucetButton && (
+                <AnimatePresence mode="wait">
+                  {usdcAirdropState === 'success' ? (
+                    <motion.span
+                      key="usdc-success"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="inline-flex items-center gap-1.5 text-xs text-success font-semibold"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      USDC sent!
+                    </motion.span>
+                  ) : usdcAirdropState === 'error' ? (
+                    <motion.span
+                      key="usdc-error"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="inline-flex items-center gap-1.5 text-xs text-red-400/80 font-medium"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                      </svg>
+                      Faucet unavailable
+                    </motion.span>
+                  ) : (
+                    <motion.button
+                      key="usdc-button"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      onClick={handleUsdcAirdrop}
+                      disabled={usdcAirdropState === 'loading'}
+                      className="inline-flex items-center gap-1.5 text-xs text-accent/70 hover:text-accent font-medium transition-colors disabled:cursor-not-allowed"
+                    >
+                      {usdcAirdropState === 'loading' ? (
+                        <>
+                          <span className="w-3 h-3 border border-accent/40 border-t-accent rounded-full animate-spin" />
+                          <span>Requesting USDC…</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                          Get test USDC
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              )}
             </div>
           )}
 
-          {/* Spacer when no airdrop button */}
-          {!showAirdropButton && <div className="mb-5" />}
+          {/* Spacer when no faucet buttons */}
+          {!showAirdropButton && !showUsdcFaucetButton && <div className="mb-5" />}
 
           {/* Bottom row */}
           <div className="flex items-center justify-between">

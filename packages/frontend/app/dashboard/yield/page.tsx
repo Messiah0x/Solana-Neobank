@@ -242,19 +242,24 @@ export default function YieldPage() {
                 transition={{ delay: 0.3 }}
                 className="flex gap-3"
               >
-                <button
-                  disabled
-                  className="flex-1 py-3.5 rounded-xl text-sm font-bold border border-accent/20 bg-accent/[0.06] text-accent/40 cursor-not-allowed"
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowDepositModal(true)}
+                  disabled={usdcAvailable <= 0}
+                  className="flex-1 py-3.5 rounded-xl text-sm font-bold border border-accent/20 bg-accent/[0.06] text-accent hover:bg-accent/[0.10] hover:border-accent/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   Deposit USDC
-                </button>
+                </motion.button>
                 {hasPosition && (
-                  <button
-                    disabled
-                    className="flex-1 py-3.5 rounded-xl text-sm font-bold border border-white/[0.07] bg-white/[0.03] text-white/25 cursor-not-allowed"
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowWithdrawModal(true)}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-bold border border-white/[0.07] bg-white/[0.03] text-white/60 hover:text-white/80 hover:border-white/15 transition-all"
                   >
                     Withdraw
-                  </button>
+                  </motion.button>
                 )}
               </motion.div>
             )}
@@ -290,6 +295,24 @@ export default function YieldPage() {
         </main>
       </div>
       <MobileNav />
+
+      {userId && (
+        <>
+          <DepositModal
+            isOpen={showDepositModal}
+            onClose={() => setShowDepositModal(false)}
+            onConfirm={handleDeposit}
+            usdcBalance={usdcAvailable}
+            apy={apy}
+          />
+          <WithdrawModal
+            isOpen={showWithdrawModal}
+            onClose={() => setShowWithdrawModal(false)}
+            onConfirm={handleWithdraw}
+            depositedAmount={deposited}
+          />
+        </>
+      )}
     </div>
   );
 }

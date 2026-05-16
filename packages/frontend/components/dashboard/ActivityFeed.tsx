@@ -7,6 +7,9 @@ interface Transaction {
   timestamp: number | null;
   status: 'success' | 'failed';
   slot: number;
+  type: 'sent' | 'received' | 'other';
+  amount: number | null;
+  counterparty: string | null;
 }
 
 interface Props {

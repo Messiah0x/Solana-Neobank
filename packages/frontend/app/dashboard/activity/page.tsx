@@ -17,6 +17,9 @@ interface Transaction {
   timestamp: number | null;
   status: 'success' | 'failed';
   slot: number;
+  type: 'sent' | 'received' | 'other';
+  amount: number | null;
+  counterparty: string | null;
 }
 
 function formatTime(ms: number): string {
@@ -43,28 +46,55 @@ function groupByDate(txs: Transaction[]): Record<string, Transaction[]> {
   return groups;
 }
 
-function TxIcon({ status }: { status: 'success' | 'failed' }) {
-  if (status === 'success') {
+function TxIcon({ type }: { type: 'sent' | 'received' | 'other' }) {
+  if (type === 'received') {
     return (
       <div className="w-10 h-10 rounded-2xl bg-success/10 border border-success/15 flex items-center justify-center flex-shrink-0">
         <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+        </svg>
+      </div>
+    );
+  }
+  if (type === 'sent') {
+    return (
+      <div className="w-10 h-10 rounded-2xl bg-error/10 border border-error/15 flex items-center justify-center flex-shrink-0">
+        <svg className="w-4 h-4 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
         </svg>
       </div>
     );
   }
   return (
-    <div className="w-10 h-10 rounded-2xl bg-error/10 border border-error/15 flex items-center justify-center flex-shrink-0">
-      <svg className="w-4 h-4 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    <div className="w-10 h-10 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center flex-shrink-0">
+      <svg className="w-4 h-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01" />
       </svg>
     </div>
   );
 }
 
+function formatAmount(amount: number | null, type: 'sent' | 'received' | 'other'): string | null {
+  if (amount === null || amount === 0) return null;
+  const sign = type === 'received' ? '+' : type === 'sent' ? '-' : '';
+  // Heuristic: USDC amounts tend to be whole or 2-decimal, SOL is usually <10
+  const formatted = amount >= 0.01 && amount < 10000
+    ? amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+    : amount.toFixed(6);
+  // If amount looks like USDC (integer or 2 decimals), show USDC; else SOL
+  const unit = Number.isInteger(amount) || (amount * 100) % 1 === 0 ? 'USDC' : 'SOL';
+  return `${sign}${formatted} ${unit}`;
+}
+
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
   const short = `${tx.signature.slice(0, 8)}···${tx.signature.slice(-6)}`;
+  const counterpartyShort = tx.counterparty
+    ? `${tx.counterparty.slice(0, 6)}···${tx.counterparty.slice(-4)}`
+    : null;
   const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
+  const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
+  const amountStr = formatAmount(tx.amount, tx.type);
+  const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';
 
   return (
     <motion.a
@@ -76,22 +106,28 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
       transition={{ delay: index * 0.03, duration: 0.25 }}
       className="flex items-center gap-3.5 py-3.5 border-b border-white/[0.04] last:border-0 group cursor-pointer hover:bg-white/[0.02] -mx-4 px-4 transition-colors"
     >
-      <TxIcon status={tx.status} />
+      <TxIcon type={tx.type} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5">
-          On-chain Transaction
+          {label}
           <svg className="w-3 h-3 text-white/20 group-hover:text-accent/50 transition-colors opacity-0 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>
         </p>
-        <p className="text-xs text-white/25 font-mono mt-0.5 truncate group-hover:text-white/40 transition-colors">{short}</p>
+        <p className="text-xs text-white/25 font-mono mt-0.5 truncate group-hover:text-white/40 transition-colors">
+          {counterpartyShort ?? short}
+        </p>
       </div>
       <div className="text-right flex-shrink-0">
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-          tx.status === 'success' ? 'bg-success/10 text-success/80' : 'bg-error/10 text-error/80'
-        }`}>
-          {tx.status}
-        </span>
+        {amountStr ? (
+          <p className={`text-sm font-semibold tabular-nums ${amountColor}`}>{amountStr}</p>
+        ) : (
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+            tx.status === 'success' ? 'bg-success/10 text-success/80' : 'bg-error/10 text-error/80'
+          }`}>
+            {tx.status}
+          </span>
+        )}
         {tx.timestamp && (
           <p className="text-[10px] text-white/20 mt-1.5 tabular-nums">{formatTime(tx.timestamp)}</p>
         )}
@@ -144,8 +180,8 @@ export default function ActivityPage() {
   const filtered = (transactions ?? []).filter((tx: Transaction) => {
     if (search && !tx.signature.toLowerCase().includes(search.toLowerCase())) return false;
     if (filter === 'yield') return false;
-    if (filter === 'received') return tx.status === 'success';
-    if (filter === 'sent') return tx.status === 'failed';
+    if (filter === 'received') return tx.type === 'received';
+    if (filter === 'sent') return tx.type === 'sent';
     return true;
   });
 
