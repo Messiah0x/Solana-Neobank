@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [walletChecked, setWalletChecked] = useState(false);
+  const [syncFailed, setSyncFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
 
@@ -46,20 +47,23 @@ export default function DashboardPage() {
   }, [ready, authenticated, router]);
 
   // Once we have a Privy wallet + userId, sync it with our backend
-  const syncWallet = useCallback(async () => {
-    if (!userId || !privyPublicKey) return;
+  const syncWallet = useCallback(async (currentPublicKey?: string) => {
+    const pubkey = currentPublicKey ?? privyPublicKey;
+    if (!userId || !pubkey) return;
     setSyncing(true);
+    setSyncFailed(false);
     try {
       try {
         const w = await getWallet(userId);
         setWalletPublicKey(w.publicKey);
       } catch {
         // Wallet not in backend yet — register the Privy wallet public key
-        const w = await registerWallet(userId, privyPublicKey);
+        const w = await registerWallet(userId, pubkey);
         setWalletPublicKey(w.publicKey);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sync wallet');
+    } catch {
+      // Network/CORS failure — don't show scary error, let user retry
+      setSyncFailed(true);
     } finally {
       setSyncing(false);
       setWalletChecked(true);
@@ -100,10 +104,24 @@ export default function DashboardPage() {
     setCreating(true);
     setError(null);
     try {
-      await createPrivyWallet();
-      // syncWallet will be triggered by the wallets dependency changing
+      let pubkey: string | null = privyPublicKey;
+      try {
+        await createPrivyWallet();
+        // wallets array will update async — grab fresh address after create
+        pubkey = wallets[0]?.address ?? privyPublicKey;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '';
+        // Privy throws if wallet already exists — treat as success and sync
+        if (!msg.toLowerCase().includes('already')) throw err;
+        pubkey = privyPublicKey;
+      }
+      // Sync immediately with the known public key (don't wait for wallets[] update)
+      if (pubkey) {
+        await syncWallet(pubkey);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create wallet');
+    } finally {
       setCreating(false);
     }
   }
@@ -114,6 +132,10 @@ export default function DashboardPage() {
   }
 
   const hasWallet = !!walletPublicKey;
+  // Show "create wallet" screen only if user has no Privy wallet at all
+  const needsWalletCreation = walletChecked && !privyPublicKey && !walletPublicKey;
+  // Show "connecting" retry UI if Privy wallet exists but sync failed
+  const needsSync = walletChecked && !!privyPublicKey && !walletPublicKey && syncFailed;
   const isLoading = !ready || (!walletChecked && authenticated);
 
   return (
@@ -148,13 +170,48 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
-          ) : !hasWallet ? (
+          ) : needsSync ? (
+            /* Privy wallet exists but backend sync failed — show retry UI */
+            <div className="px-4 pt-5 lg:pt-10 lg:px-10">
+              <div className="max-w-md">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-white/[0.06] bg-surface/30 p-6 text-center"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-5 h-5 text-accent/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-white/70 mb-1">Connecting your wallet</p>
+                  <p className="text-xs text-white/30 mb-5">Your Privy wallet is ready. Tap below to connect it to your account.</p>
+                  <button
+                    onClick={() => syncWallet()}
+                    className="w-full py-3 rounded-xl bg-accent text-background text-sm font-semibold hover:bg-accent/90 transition-colors"
+                  >
+                    Connect Wallet
+                  </button>
+                </motion.div>
+              </div>
+            </div>
+          ) : needsWalletCreation ? (
             <div className="px-4 pt-5 lg:pt-10 lg:px-10">
               <div className="max-w-md">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-4 px-1">
                   Get started
                 </p>
                 <WalletCard onCreateWallet={handleCreateWallet} creating={creating} />
+              </div>
+            </div>
+          ) : !hasWallet ? (
+            /* Privy wallet loading / not yet checked */
+            <div className="px-4 pt-4 space-y-3">
+              <div className="rounded-3xl border border-white/[0.06] bg-surface/30 h-44 animate-pulse" />
+              <div className="grid grid-cols-4 gap-3 pt-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="rounded-2xl bg-white/[0.04] h-20 animate-pulse" />
+                ))}
               </div>
             </div>
           ) : (
