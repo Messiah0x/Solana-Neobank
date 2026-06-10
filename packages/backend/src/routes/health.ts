@@ -8,6 +8,7 @@ export default async function healthRoutes(fastify: FastifyInstance) {
       await prisma.$queryRaw`SELECT 1`;
     } catch (err) {
       db = err instanceof Error ? err.message : 'error';
+      fastify.log.error({ err }, '[health] db check failed');
     }
     const status = db === 'ok' ? 'ok' : 'degraded';
     return reply.code(db === 'ok' ? 200 : 503).send({
