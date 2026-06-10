@@ -50,9 +50,18 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
   const [result, setResult] = useState<'heads' | 'tails' | null>(null);
   const [rotation, setRotation] = useState(0);
 
+  function flipCoin(): boolean {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const buf = new Uint32Array(1);
+      crypto.getRandomValues(buf);
+      return buf[0] % 2 === 0;
+    }
+    return Math.random() < 0.5;
+  }
+
   function flip() {
     if (phase !== 'idle') return;
-    const isHeads = Math.random() < 0.5;
+    const isHeads = flipCoin();
     const outcome: 'heads' | 'tails' = isHeads ? 'heads' : 'tails';
     // Land showing the correct face: heads = multiple of 360, tails = 180 + multiple of 360
     const fullSpins = 5;
