@@ -37,14 +37,18 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
     if (!publicKey || airdropState === 'loading') return;
     setAirdropState('loading');
     try {
-      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      const connection = new Connection(
+        process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://api.devnet.solana.com',
+        'confirmed',
+      );
       const pubkey = new PublicKey(publicKey);
       const sig = await connection.requestAirdrop(pubkey, LAMPORTS_PER_SOL);
       await connection.confirmTransaction(sig);
       setAirdropState('success');
       onAirdrop?.();
       setTimeout(() => setAirdropState('idle'), 3000);
-    } catch {
+    } catch (err) {
+      console.error('[airdrop]', err);
       setAirdropState('idle');
     }
   }
@@ -62,7 +66,8 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
       setUsdcAirdropState('success');
       onAirdrop?.();
       setTimeout(() => setUsdcAirdropState('idle'), 3000);
-    } catch {
+    } catch (err) {
+      console.error('[usdc faucet]', err);
       setUsdcAirdropState('error');
       setTimeout(() => setUsdcAirdropState('idle'), 3000);
     }

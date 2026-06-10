@@ -137,7 +137,6 @@ export async function getRecentTransactions(publicKey: string, limit = 10) {
       timestamp: sig.blockTime ? sig.blockTime * 1000 : null,
       status: sig.err ? 'failed' : ('success' as 'success' | 'failed'),
       slot: sig.slot,
-      meta: parsed?.meta ?? null,
       type: enriched.type,
       amount: enriched.amount,
       counterparty: enriched.counterparty,

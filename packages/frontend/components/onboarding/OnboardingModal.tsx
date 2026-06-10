@@ -70,7 +70,10 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
     if (!publicKey || solState === 'loading') return;
     setSolState('loading');
     try {
-      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      const connection = new Connection(
+        process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://api.devnet.solana.com',
+        'confirmed',
+      );
       const pubkey = new PublicKey(publicKey);
       const sig = await connection.requestAirdrop(pubkey, LAMPORTS_PER_SOL);
       await connection.confirmTransaction(sig);
@@ -129,7 +132,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 16 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[92dvh] overflow-y-auto"
         style={{
           background: 'linear-gradient(145deg, #1A1510 0%, #0F0D0A 50%, #0A0A0A 100%)',
           border: '1px solid rgba(212,175,127,0.15)',

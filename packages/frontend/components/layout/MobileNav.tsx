@@ -60,7 +60,7 @@ export function MobileNav() {
       className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-2xl border-t border-white/[0.06]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center justify-around h-16">
+      <div className="flex items-center justify-around h-16 max-w-2xl mx-auto">
         {tabs.map((tab) => {
           const active = pathname === tab.href;
           return (

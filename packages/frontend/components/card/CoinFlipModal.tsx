@@ -83,7 +83,7 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-sm rounded-3xl p-6 flex flex-col items-center text-center"
+          className="relative w-full max-w-sm rounded-3xl p-6 flex flex-col items-center text-center max-h-[90dvh] overflow-y-auto"
           style={{
             background: 'linear-gradient(160deg, #1C1610 0%, #100C08 100%)',
             border: '1px solid rgba(212,175,127,0.18)',

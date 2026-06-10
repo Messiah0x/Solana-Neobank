@@ -17,8 +17,6 @@ export function ReceiveModal({ publicKey, onClose }: Props) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const short = `${publicKey.slice(0, 8)}···${publicKey.slice(-8)}`;
-
   return (
     <AnimatePresence>
       <motion.div
@@ -35,7 +33,7 @@ export function ReceiveModal({ publicKey, onClose }: Props) {
           exit={{ opacity: 0, y: 40, scale: 0.97 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm rounded-3xl p-6"
+          className="w-full max-w-sm rounded-3xl p-6 max-h-[90dvh] overflow-y-auto"
           style={{
             background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)',
             border: '1px solid rgba(212,175,127,0.12)',

@@ -45,6 +45,7 @@ export function SwapModal({ solBalance, onClose, onSuccess }: Props) {
   const [swappedUsdc, setSwappedUsdc] = useState<number>(0);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quoteRequestRef = useRef(0);
 
   const maxSol = Math.max(0, solBalance - FEE_RESERVE_SOL);
   const amountNum = parseFloat(amount);
@@ -56,11 +57,14 @@ export function SwapModal({ solBalance, onClose, onSuccess }: Props) {
     setQuoteError(null);
     if (isNaN(solAmount) || solAmount <= 0) return;
 
+    // Guard against out-of-order responses when the user types quickly
+    const requestId = ++quoteRequestRef.current;
     const lamports = Math.round(solAmount * 1e9);
     try {
       const url = `${JUPITER_QUOTE_URL}?inputMint=${SOL_MINT}&outputMint=${USDC_MINT}&amount=${lamports}&slippageBps=${SLIPPAGE_BPS}`;
       const res = await fetch(url);
       const data = await res.json();
+      if (requestId !== quoteRequestRef.current) return;
 
       if (!res.ok || data.error || data.errorCode) {
         const msg =
@@ -77,6 +81,7 @@ export function SwapModal({ solBalance, onClose, onSuccess }: Props) {
         raw: data,
       });
     } catch {
+      if (requestId !== quoteRequestRef.current) return;
       setQuoteError('Swap unavailable on devnet — try mainnet');
     }
   }, []);
@@ -199,7 +204,7 @@ export function SwapModal({ solBalance, onClose, onSuccess }: Props) {
           exit={{ opacity: 0, y: 40, scale: 0.97 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm rounded-3xl p-6"
+          className="w-full max-w-sm rounded-3xl p-6 max-h-[90dvh] overflow-y-auto"
           style={{
             background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)',
             border: '1px solid rgba(212,175,127,0.12)',
