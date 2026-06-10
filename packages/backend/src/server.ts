@@ -42,6 +42,14 @@ async function build() {
   return server;
 }
 
+process.on('unhandledRejection', (reason) => {
+  server.log.error({ reason }, 'unhandledRejection');
+});
+
+process.on('uncaughtException', (err) => {
+  server.log.error(err, 'uncaughtException');
+});
+
 async function start() {
   try {
     const app = await build();

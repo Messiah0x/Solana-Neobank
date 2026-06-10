@@ -27,19 +27,36 @@ async function getUserKeypair(dbUserId: string): Promise<Keypair> {
   return Keypair.fromSecretKey(secretKey);
 }
 
+const APY_CACHE_TTL_MS = 5 * 60 * 1000;
+let apyCache: { value: number; fetchedAt: number } | null = null;
+let apyCacheInflight: Promise<number> | null = null;
+
 export async function getCurrentApy(): Promise<number> {
-  try {
-    const dummy = Keypair.generate();
-    const client = await createMarginfiClient(dummy);
-    const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
-    const bank = client.getBankByMint(usdcMint);
-    if (!bank) return FALLBACK_APY;
-    const { lendingRate } = bank.computeInterestRates();
-    const apy = lendingRate.toNumber() * 100;
-    return apy > 0 ? apy : FALLBACK_APY;
-  } catch {
-    return FALLBACK_APY;
+  if (apyCache && Date.now() - apyCache.fetchedAt < APY_CACHE_TTL_MS) {
+    return apyCache.value;
   }
+  if (apyCacheInflight) return apyCacheInflight;
+
+  apyCacheInflight = (async () => {
+    try {
+      const dummy = Keypair.generate();
+      const client = await createMarginfiClient(dummy);
+      const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
+      const bank = client.getBankByMint(usdcMint);
+      const apy = bank ? bank.computeInterestRates().lendingRate.toNumber() * 100 : FALLBACK_APY;
+      const value = apy > 0 ? apy : FALLBACK_APY;
+      apyCache = { value, fetchedAt: Date.now() };
+      return value;
+    } catch {
+      const value = apyCache?.value ?? FALLBACK_APY;
+      apyCache = { value, fetchedAt: Date.now() };
+      return value;
+    } finally {
+      apyCacheInflight = null;
+    }
+  })();
+
+  return apyCacheInflight;
 }
 
 export async function deposit(userId: string, amountUsdc: number) {
