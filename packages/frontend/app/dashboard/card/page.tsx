@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
@@ -8,6 +8,20 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { AvanorLogo } from '@/components/brand/AvanorLogo';
+import { CoinFlipModal } from '@/components/card/CoinFlipModal';
+
+interface CardTransaction {
+  id: string;
+  merchant: string;
+  amount: number;
+  doubleOrNothing: boolean;
+  result?: 'heads' | 'tails';
+  date: string;
+}
+
+const MERCHANTS = ['Coffee Co.', 'Metro Transit', 'Quick Mart', 'Streamflix', 'The Corner Diner', 'Cloud Nine SaaS'];
+const PRESET_AMOUNTS = [5, 12, 25, 50];
+const TXN_STORAGE_KEY = 'avanor_card_txns';
 
 function VisaWordmark() {
   return (
@@ -85,6 +99,59 @@ export default function CardPage() {
   const [frozen, setFrozen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [transactions, setTransactions] = useState<CardTransaction[]>([]);
+  const [spendAmount, setSpendAmount] = useState(PRESET_AMOUNTS[1]);
+  const [doubleOrNothing, setDoubleOrNothing] = useState(false);
+  const [pendingFlip, setPendingFlip] = useState<{ amount: number; merchant: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TXN_STORAGE_KEY);
+      if (raw) setTransactions(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function persistTransactions(next: CardTransaction[]) {
+    setTransactions(next);
+    try {
+      localStorage.setItem(TXN_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  }
+
+  function handleSimulatePurchase() {
+    if (frozen) return;
+    const merchant = MERCHANTS[Math.floor(Math.random() * MERCHANTS.length)];
+    if (doubleOrNothing) {
+      setPendingFlip({ amount: spendAmount, merchant });
+      return;
+    }
+    const txn: CardTransaction = {
+      id: crypto.randomUUID(),
+      merchant,
+      amount: spendAmount,
+      doubleOrNothing: false,
+      date: new Date().toISOString(),
+    };
+    persistTransactions([txn, ...transactions].slice(0, 20));
+  }
+
+  function handleFlipResolved(result: 'heads' | 'tails', finalAmount: number) {
+    if (!pendingFlip) return;
+    const txn: CardTransaction = {
+      id: crypto.randomUUID(),
+      merchant: pendingFlip.merchant,
+      amount: finalAmount,
+      doubleOrNothing: true,
+      result,
+      date: new Date().toISOString(),
+    };
+    persistTransactions([txn, ...transactions].slice(0, 20));
+    setPendingFlip(null);
+  }
 
   const displayName = name.toUpperCase() || 'AVANOR MEMBER';
 
@@ -322,6 +389,74 @@ export default function CardPage() {
               />
             </motion.div>
 
+            {/* Simulate purchase */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12, duration: 0.4 }}
+              className="rounded-2xl p-4 mb-6 border border-white/[0.06] bg-surface/40"
+            >
+              <p className="text-sm font-semibold text-ivory mb-1">Simulate a purchase</p>
+              <p className="text-xs text-white/30 mb-4 leading-relaxed">
+                Try out card spending with test transactions — no real funds involved.
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {PRESET_AMOUNTS.map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setSpendAmount(amt)}
+                    disabled={frozen}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 ${
+                      spendAmount === amt
+                        ? 'bg-accent text-background'
+                        : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08]'
+                    } ${frozen ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setDoubleOrNothing((v) => !v)}
+                disabled={frozen}
+                className={`w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 mb-4 border transition-all duration-200 ${
+                  doubleOrNothing
+                    ? 'border-accent/40 bg-accent/[0.08]'
+                    : 'border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04]'
+                } ${frozen ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                <div className="text-left">
+                  <p className={`text-sm font-semibold ${doubleOrNothing ? 'text-accent' : 'text-white/60'}`}>
+                    Double or Nothing
+                  </p>
+                  <p className="text-[11px] text-white/30 mt-0.5">Flip a coin — heads is free, tails costs double</p>
+                </div>
+                <div
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                    doubleOrNothing ? 'bg-accent' : 'bg-white/15'
+                  }`}
+                >
+                  <motion.div
+                    className="absolute top-0.5 w-5 h-5 rounded-full bg-background"
+                    animate={{ x: doubleOrNothing ? 22 : 2 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                </div>
+              </button>
+
+              <button
+                onClick={handleSimulatePurchase}
+                disabled={frozen}
+                className={`w-full py-3 rounded-xl font-semibold text-sm transition-opacity ${
+                  frozen ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-accent text-background hover:opacity-90'
+                }`}
+              >
+                {doubleOrNothing ? `Pay $${spendAmount} — Flip the coin` : `Pay $${spendAmount}`}
+              </button>
+            </motion.div>
+
             {/* Premium launch notice */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -364,7 +499,11 @@ export default function CardPage() {
               className="grid grid-cols-2 gap-3 mb-6"
             >
               {[
-                { label: 'Monthly spend', value: '$0.00', sub: 'No limit set' },
+                {
+                  label: 'Monthly spend',
+                  value: `$${transactions.reduce((sum, t) => sum + t.amount, 0).toFixed(2)}`,
+                  sub: transactions.length ? `${transactions.length} simulated transaction${transactions.length === 1 ? '' : 's'}` : 'No limit set',
+                },
                 { label: 'Available', value: '$0.00', sub: 'Add funds to spend' },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-surface/40 p-4">
@@ -382,42 +521,81 @@ export default function CardPage() {
               transition={{ delay: 0.25, duration: 0.4 }}
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3">Transactions</p>
-              <div
-                className="rounded-2xl border border-white/[0.06] py-12 px-6 flex flex-col items-center text-center"
-                style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)' }}
-              >
-                {/* Decorative card illustration */}
-                <div className="relative mb-5">
-                  <div
-                    className="w-16 h-10 rounded-xl border"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(212,175,127,0.08) 0%, rgba(212,175,127,0.03) 100%)',
-                      border: '1px solid rgba(212,175,127,0.15)',
-                    }}
-                  />
-                  <div
-                    className="absolute -bottom-1.5 -right-1.5 w-16 h-10 rounded-xl border"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                    }}
-                  />
-                  <div className="absolute top-2 left-2.5 flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent/25" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent/15" />
+              {transactions.length === 0 ? (
+                <div
+                  className="rounded-2xl border border-white/[0.06] py-12 px-6 flex flex-col items-center text-center"
+                  style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)' }}
+                >
+                  {/* Decorative card illustration */}
+                  <div className="relative mb-5">
+                    <div
+                      className="w-16 h-10 rounded-xl border"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(212,175,127,0.08) 0%, rgba(212,175,127,0.03) 100%)',
+                        border: '1px solid rgba(212,175,127,0.15)',
+                      }}
+                    />
+                    <div
+                      className="absolute -bottom-1.5 -right-1.5 w-16 h-10 rounded-xl border"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                      }}
+                    />
+                    <div className="absolute top-2 left-2.5 flex gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent/25" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent/15" />
+                    </div>
                   </div>
+                  <p className="text-sm font-semibold text-white/30">No card transactions yet</p>
+                  <p className="text-xs text-white/18 mt-1.5 leading-relaxed">
+                    Simulate a purchase above to see it here
+                  </p>
                 </div>
-                <p className="text-sm font-semibold text-white/30">No card transactions yet</p>
-                <p className="text-xs text-white/18 mt-1.5 leading-relaxed">
-                  Fund your account to get started
-                </p>
-              </div>
+              ) : (
+                <div className="rounded-2xl border border-white/[0.06] divide-y divide-white/[0.05] overflow-hidden">
+                  {transactions.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between px-4 py-3.5">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white/75 truncate">{t.merchant}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-[11px] text-white/30">
+                            {new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </p>
+                          {t.doubleOrNothing && (
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide ${
+                                t.result === 'heads'
+                                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                              }`}
+                            >
+                              {t.result === 'heads' ? 'FREE' : '2x'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="font-mono text-sm font-bold text-white/70 flex-shrink-0 ml-3">
+                        -${t.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
           </div>
         </main>
       </div>
       <MobileNav />
+
+      {pendingFlip && (
+        <CoinFlipModal
+          amount={pendingFlip.amount}
+          onClose={() => setPendingFlip(null)}
+          onResolved={handleFlipResolved}
+        />
+      )}
     </div>
   );
 }
