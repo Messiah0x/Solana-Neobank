@@ -24,19 +24,23 @@ function ProjectionRow({ label, value }: { label: string; value: string }) {
 export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [amountInput, setAmountInput] = useState('');
   const { toast } = useToast();
 
-  const amount = usdcBalance;
+  const amount = amountInput === '' ? usdcBalance : parseFloat(amountInput);
+  const amountInvalid = isNaN(amount) || amount <= 0 || amount > usdcBalance;
   const dailyYield = (amount * (apy / 100)) / 365;
   const monthlyYield = (amount * (apy / 100)) / 12;
   const yearlyYield = amount * (apy / 100);
 
   async function handleConfirm() {
+    if (amountInvalid) return;
     setConfirming(true);
     setError(null);
     try {
       await onConfirm(amount);
       toast.success(`Deposited $${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC — now earning ${apy.toFixed(1)}% APY`);
+      setAmountInput('');
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
@@ -88,13 +92,43 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
 
             {/* Amount */}
             <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 mb-4">
-              <p className="text-xs text-white/35 uppercase tracking-wider font-semibold mb-2">Depositing</p>
-              <div className="flex items-end justify-between">
-                <span className="font-mono font-bold text-3xl">
-                  ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-white/40 text-sm font-medium mb-1">USDC</span>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-white/35 uppercase tracking-wider font-semibold">Depositing</p>
+                <button
+                  type="button"
+                  onClick={() => setAmountInput('')}
+                  disabled={confirming}
+                  className="text-[11px] font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors disabled:opacity-40"
+                >
+                  Max
+                </button>
               </div>
+              <div className="flex items-end justify-between gap-3">
+                <div className="flex items-baseline gap-1 flex-1 min-w-0">
+                  <span className="font-mono font-bold text-3xl text-white/60">$</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    placeholder={usdcBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    value={amountInput}
+                    onChange={(e) => setAmountInput(e.target.value)}
+                    disabled={confirming}
+                    className={`w-full bg-transparent font-mono font-bold text-3xl outline-none placeholder:text-white/80 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      amountInput !== '' && amountInvalid ? 'text-error' : ''
+                    }`}
+                  />
+                </div>
+                <span className="text-white/40 text-sm font-medium mb-1 flex-shrink-0">USDC</span>
+              </div>
+              {amountInput !== '' && amountInvalid && (
+                <p className="text-[11px] text-error mt-2">
+                  {amount > usdcBalance
+                    ? `You have $${usdcBalance.toFixed(2)} USDC available`
+                    : 'Enter a valid amount'}
+                </p>
+              )}
             </div>
 
             {/* APY badge */}
@@ -129,7 +163,7 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleConfirm}
-                disabled={confirming || amount <= 0}
+                disabled={confirming || amountInvalid}
                 className="flex-[2] py-3.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
               >
                 {confirming ? (
