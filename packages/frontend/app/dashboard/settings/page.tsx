@@ -268,9 +268,14 @@ export default function SettingsPage() {
               <SectionLabel>Wallet</SectionLabel>
               <div className="rounded-2xl border border-white/[0.06] bg-surface/30 overflow-hidden">
                 {!wallet ? (
-                  <div className="px-4 py-5 text-center">
-                    <p className="text-sm text-white/30">No wallet created yet</p>
-                    <p className="text-xs text-white/20 mt-1">Go to Overview to create your wallet</p>
+                  <div className="flex flex-col items-center py-16 px-6 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
+                      <svg className="w-6 h-6 text-white/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-semibold text-white/35">No wallet created yet</p>
+                    <p className="text-xs text-white/20 mt-1.5">Go to Overview to create your wallet</p>
                   </div>
                 ) : (
                   <>
