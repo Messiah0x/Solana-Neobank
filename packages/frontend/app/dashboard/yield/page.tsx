@@ -112,7 +112,7 @@ export default function YieldPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
-              className="relative rounded-2xl overflow-hidden p-5"
+              className="relative rounded-2xl overflow-hidden p-5 theme-invert"
               style={{
                 background: 'linear-gradient(135deg, #0F1A12 0%, #0A0F0B 50%, #0A0A0A 100%)',
                 border: '1px solid rgba(16,185,129,0.15)',
