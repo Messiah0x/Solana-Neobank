@@ -203,7 +203,7 @@ export default function CardPage() {
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative rounded-3xl overflow-hidden mb-3"
+              className="relative rounded-3xl overflow-hidden mb-3 theme-invert"
               style={{
                 background: frozen
                   ? 'linear-gradient(145deg, #181818 0%, #111111 40%, #0A0A0A 100%)'

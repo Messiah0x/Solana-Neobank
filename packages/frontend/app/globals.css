@@ -37,6 +37,15 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: rgb(var(--color-bg));
+  }
+
+  /* For surfaces that are always rendered with a dark gradient (cards,
+     modals, hero panels) regardless of the active theme — keeps
+     text-white/text-ivory readable on top of them in light mode. */
+  .theme-invert {
+    --color-fg: 255 255 255;
+    --color-ivory: 247 245 240;
   }
 
   body {

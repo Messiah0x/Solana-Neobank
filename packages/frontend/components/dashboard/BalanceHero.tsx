@@ -86,7 +86,7 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative rounded-3xl overflow-hidden"
+        className="relative rounded-3xl overflow-hidden theme-invert"
         style={{
           background: 'linear-gradient(135deg, #1A1510 0%, #0F0D0A 50%, #0A0A0A 100%)',
           border: '1px solid rgba(212,175,127,0.12)',

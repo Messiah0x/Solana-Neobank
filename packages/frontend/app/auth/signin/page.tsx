@@ -26,7 +26,7 @@ export default function SignInPage() {
 
   return (
     <div
-      className="min-h-dvh bg-background flex flex-col items-center justify-center px-6"
+      className="min-h-dvh bg-background flex flex-col items-center justify-center px-6 theme-invert"
       style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(212,175,127,0.06) 0%, #0A0A0A 55%)' }}
     >
       <motion.div

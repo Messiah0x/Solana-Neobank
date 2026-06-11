@@ -166,7 +166,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
           exit={{ opacity: 0, y: 40, scale: 0.97 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm rounded-3xl p-6 max-h-[90dvh] overflow-y-auto"
+          className="w-full max-w-sm rounded-3xl p-6 max-h-[90dvh] overflow-y-auto theme-invert"
           style={{
             background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)',
             border: '1px solid rgba(212,175,127,0.12)',

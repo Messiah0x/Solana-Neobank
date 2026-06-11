@@ -150,7 +150,7 @@ export default function AssetsPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="rounded-3xl p-6 relative overflow-hidden"
+              className="rounded-3xl p-6 relative overflow-hidden theme-invert"
               style={{
                 background: 'linear-gradient(145deg, #1C1610 0%, #130F0A 40%, #0A0A0A 100%)',
                 border: '1px solid rgba(212,175,127,0.18)',

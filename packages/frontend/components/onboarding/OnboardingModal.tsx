@@ -132,7 +132,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 16 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[92dvh] overflow-y-auto"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[92dvh] overflow-y-auto theme-invert"
         style={{
           background: 'linear-gradient(145deg, #1A1510 0%, #0F0D0A 50%, #0A0A0A 100%)',
           border: '1px solid rgba(212,175,127,0.15)',
