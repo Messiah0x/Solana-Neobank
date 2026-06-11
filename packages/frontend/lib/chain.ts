@@ -11,8 +11,42 @@ const RPC_URL = process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://api.devnet.solana
 const USDC_MINT = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
 const USDC_DECIMALS = 6;
 
+// Mainnet — used by the Asset Dash to read real-world wallet balances.
+// The app's own banking flow runs on devnet (RPC_URL above), but
+// wallets a user adds to track will hold real mainnet funds.
+const MAINNET_RPC_URL = process.env.NEXT_PUBLIC_MAINNET_RPC || 'https://api.mainnet-beta.solana.com';
+const MAINNET_USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+
 function getConnection() {
   return new Connection(RPC_URL, 'confirmed');
+}
+
+function getMainnetConnection() {
+  return new Connection(MAINNET_RPC_URL, 'confirmed');
+}
+
+export async function fetchMainnetBalancesFromChain(publicKey: string): Promise<{
+  publicKey: string;
+  usdc: number;
+  sol: number;
+}> {
+  const connection = getMainnetConnection();
+  const owner = new PublicKey(publicKey);
+
+  const [sol, usdc] = await Promise.all([
+    connection.getBalance(owner).then((l) => l / LAMPORTS_PER_SOL),
+    (async () => {
+      try {
+        const ata = await getAssociatedTokenAddress(MAINNET_USDC_MINT, owner);
+        const account = await getAccount(connection, ata);
+        return Number(account.amount) / 10 ** USDC_DECIMALS;
+      } catch {
+        return 0; // no USDC account yet
+      }
+    })(),
+  ]);
+
+  return { publicKey, usdc, sol };
 }
 
 export async function fetchBalancesFromChain(publicKey: string): Promise<{

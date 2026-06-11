@@ -48,6 +48,32 @@
     --color-ivory: 247 245 240;
   }
 
+  /* Low-opacity "muted" text was tuned for white-on-black, where even
+     15-30% opacity stays legible. The same alpha values applied as
+     dark-on-white in light mode produce much lower contrast, so bump
+     them up when the light theme is active. */
+  .light .text-white\/15  { color: rgb(var(--color-fg) / 0.38); }
+  .light .text-white\/18  { color: rgb(var(--color-fg) / 0.40); }
+  .light .text-white\/20  { color: rgb(var(--color-fg) / 0.42); }
+  .light .text-white\/25  { color: rgb(var(--color-fg) / 0.46); }
+  .light .text-white\/30  { color: rgb(var(--color-fg) / 0.50); }
+  .light .text-white\/35  { color: rgb(var(--color-fg) / 0.55); }
+  .light .text-white\/40  { color: rgb(var(--color-fg) / 0.60); }
+  .light .text-white\/45  { color: rgb(var(--color-fg) / 0.64); }
+  .light .text-white\/50  { color: rgb(var(--color-fg) / 0.68); }
+  .light .text-white\/60  { color: rgb(var(--color-fg) / 0.74); }
+  .light .text-white\/65  { color: rgb(var(--color-fg) / 0.76); }
+  .light .text-white\/70  { color: rgb(var(--color-fg) / 0.80); }
+  .light .text-white\/75  { color: rgb(var(--color-fg) / 0.84); }
+  .light .text-white\/80  { color: rgb(var(--color-fg) / 0.88); }
+
+  /* Same story for disabled controls — opacity-40 on a gold/dark label
+     over a white card is much harder to read than over a black one. */
+  .light .disabled\:opacity-40:disabled,
+  .light .disabled\:opacity-50:disabled {
+    opacity: 0.6 !important;
+  }
+
   body {
     background-color: rgb(var(--color-bg));
     color: rgb(var(--color-fg));

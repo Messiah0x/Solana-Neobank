@@ -7,7 +7,7 @@ import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { fetchBalancesFromChain } from '@/lib/chain';
+import { fetchMainnetBalancesFromChain } from '@/lib/chain';
 import { useSolPrice } from '@/lib/useSolPrice';
 
 const STORAGE_KEY = 'avanor_asset_dash_wallets';
@@ -83,7 +83,7 @@ export default function AssetsPage() {
     const results = await Promise.all(
       list.map(async (w) => {
         try {
-          const b = await fetchBalancesFromChain(w.address);
+          const b = await fetchMainnetBalancesFromChain(w.address);
           return { address: w.address, label: w.label, sol: b.sol, usdc: b.usdc };
         } catch {
           return { address: w.address, label: w.label, sol: 0, usdc: 0, error: true };
@@ -276,7 +276,8 @@ export default function AssetsPage() {
                 {addError && <p className="text-xs text-error mt-2">{addError}</p>}
                 <p className="text-[11px] text-white/25 mt-3 leading-relaxed">
                   Track any Solana wallet — yours, a cold wallet, or someone else's public address.
-                  Balances are read directly from the chain and refresh automatically. Saved on this device.
+                  Balances (SOL + USDC) are read directly from Solana mainnet and refresh automatically.
+                  Saved on this device. Note: your Avanor wallet runs on devnet, so it may show $0 here.
                 </p>
               </div>
             </motion.div>
