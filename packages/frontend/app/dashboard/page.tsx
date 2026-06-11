@@ -127,7 +127,7 @@ export default function DashboardPage() {
     { refreshInterval: 60_000 },
   );
 
-  const { data: transactions, isLoading: txLoading } = useSWR(
+  const { data: transactions, isLoading: txLoading, mutate: mutateTransactions } = useSWR(
     walletPublicKey && userId ? `tx-${userId}` : null,
     async () => {
       try {
@@ -270,6 +270,11 @@ export default function DashboardPage() {
                 isLoading={balanceLoading}
                 publicKey={walletPublicKey ?? ''}
                 onAirdrop={() => mutateBalance()}
+                onRefresh={() => {
+                  mutateBalance();
+                  mutateYield();
+                  mutateTransactions();
+                }}
               />
 
               <QuickActions

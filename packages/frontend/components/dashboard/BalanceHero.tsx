@@ -13,12 +13,14 @@ interface Props {
   isLoading: boolean;
   publicKey: string;
   onAirdrop?: () => void;
+  onRefresh?: () => void;
 }
 
 type AirdropState = 'idle' | 'loading' | 'success' | 'error';
 
-export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, onAirdrop }: Props) {
+export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, onAirdrop, onRefresh }: Props) {
   const [copied, setCopied] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [airdropState, setAirdropState] = useState<AirdropState>('idle');
   const [usdcAirdropState, setUsdcAirdropState] = useState<AirdropState>('idle');
   const truncated = publicKey ? `${publicKey.slice(0, 4)}···${publicKey.slice(-4)}` : '';
@@ -81,6 +83,13 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
   const showAirdropButton = !isLoading && sol < 0.01;
   const showUsdcFaucetButton = !isLoading && usdc < 1;
 
+  function handleRefresh() {
+    if (refreshing) return;
+    setRefreshing(true);
+    onRefresh?.();
+    setTimeout(() => setRefreshing(false), 1000);
+  }
+
   return (
     <div className="px-4 pt-2 pb-1">
       <motion.div
@@ -108,9 +117,27 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
 
         <div className="relative p-6">
           {/* Label */}
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3">
-            Total Portfolio
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30">
+              Total Portfolio
+            </p>
+            <button
+              onClick={handleRefresh}
+              disabled={isLoading || refreshing}
+              aria-label="Refresh balances"
+              className="w-6 h-6 -m-1 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.05] transition-colors disabled:opacity-40"
+            >
+              <svg
+                className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+            </button>
+          </div>
 
           {/* Main hero: total USD value */}
           {isLoading ? (
