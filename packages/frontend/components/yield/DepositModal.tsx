@@ -14,7 +14,7 @@ interface Props {
 
 function ProjectionRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-white/[0.05] last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-white/[0.05] last:border-0">
       <span className="text-sm text-white/40">{label}</span>
       <span className="font-mono text-sm font-semibold text-white">{value}</span>
     </div>
@@ -71,14 +71,14 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-            className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.08] rounded-t-3xl p-8 pb-12 max-w-lg mx-auto max-h-[92dvh] overflow-y-auto theme-invert"
+            className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.08] rounded-t-3xl p-6 pb-8 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto theme-invert"
             style={{ background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)' }}
           >
             {/* Handle bar */}
-            <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-8" />
+            <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-5" />
 
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -91,7 +91,7 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
             </div>
 
             {/* Amount */}
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 mb-4">
+            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 mb-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-white/35 uppercase tracking-wider font-semibold">Depositing</p>
                 <button
@@ -107,15 +107,19 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
                 <div className="flex items-baseline gap-1 flex-1 min-w-0">
                   <span className="font-mono font-bold text-3xl text-white/60">$</span>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
-                    min="0"
-                    step="0.01"
                     placeholder={usdcBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     value={amountInput}
-                    onChange={(e) => setAmountInput(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Allow only digits and a single decimal point
+                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                        setAmountInput(val);
+                      }
+                    }}
                     disabled={confirming}
-                    className={`w-full bg-transparent font-mono font-bold text-3xl outline-none placeholder:text-white/80 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    className={`w-full bg-transparent font-mono font-bold text-3xl outline-none placeholder:text-white/80 disabled:opacity-50 ${
                       amountInput !== '' && amountInvalid ? 'text-error' : ''
                     }`}
                   />
@@ -132,13 +136,13 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
             </div>
 
             {/* APY badge */}
-            <div className="flex items-center justify-between rounded-xl bg-accent-muted border border-accent/15 px-4 py-3 mb-4">
+            <div className="flex items-center justify-between rounded-xl bg-accent-muted border border-accent/15 px-4 py-2.5 mb-3">
               <span className="text-sm text-white/60">APY via Marginfi</span>
               <span className="font-mono font-bold text-accent text-lg">{apy.toFixed(1)}%</span>
             </div>
 
             {/* Projections */}
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] px-4 mb-6">
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] px-4 mb-4">
               <ProjectionRow label="Daily earnings" value={`$${dailyYield.toFixed(4)}`} />
               <ProjectionRow label="Monthly earnings" value={`$${monthlyYield.toFixed(2)}`} />
               <ProjectionRow label="Yearly earnings" value={`$${yearlyYield.toFixed(2)}`} />
