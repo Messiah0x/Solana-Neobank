@@ -25,6 +25,18 @@ function getMainnetConnection() {
   return new Connection(MAINNET_RPC_URL, 'confirmed');
 }
 
+// Public RPC endpoints occasionally hang instead of erroring, which can leave
+// the UI stuck on "Loading…" indefinitely. Bound every chain read so a slow
+// endpoint surfaces as a failure within a few seconds.
+const RPC_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(promise: Promise<T>, ms = RPC_TIMEOUT_MS): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('RPC request timed out')), ms)),
+  ]);
+}
+
 export async function fetchMainnetBalancesFromChain(publicKey: string): Promise<{
   publicKey: string;
   usdc: number;
@@ -34,14 +46,14 @@ export async function fetchMainnetBalancesFromChain(publicKey: string): Promise<
   const owner = new PublicKey(publicKey);
 
   const [sol, usdc] = await Promise.all([
-    connection.getBalance(owner).then((l) => l / LAMPORTS_PER_SOL),
+    withTimeout(connection.getBalance(owner)).then((l) => l / LAMPORTS_PER_SOL),
     (async () => {
       try {
-        const ata = await getAssociatedTokenAddress(MAINNET_USDC_MINT, owner);
-        const account = await getAccount(connection, ata);
+        const ata = await withTimeout(getAssociatedTokenAddress(MAINNET_USDC_MINT, owner));
+        const account = await withTimeout(getAccount(connection, ata));
         return Number(account.amount) / 10 ** USDC_DECIMALS;
       } catch {
-        return 0; // no USDC account yet
+        return 0; // no USDC account yet, or the lookup timed out
       }
     })(),
   ]);

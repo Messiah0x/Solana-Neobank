@@ -80,17 +80,21 @@ export default function PortfolioPage() {
       return;
     }
     setLoading(true);
-    const results = await Promise.all(
+    setBalances([]);
+    // Resolve each wallet independently so a slow lookup for one address
+    // doesn't hold up the rest from appearing.
+    await Promise.all(
       list.map(async (w) => {
+        let result: WalletBalance;
         try {
           const b = await fetchMainnetBalancesFromChain(w.address);
-          return { address: w.address, label: w.label, sol: b.sol, usdc: b.usdc };
+          result = { address: w.address, label: w.label, sol: b.sol, usdc: b.usdc };
         } catch {
-          return { address: w.address, label: w.label, sol: 0, usdc: 0, error: true };
+          result = { address: w.address, label: w.label, sol: 0, usdc: 0, error: true };
         }
+        setBalances((prev) => [...prev.filter((p) => p.address !== w.address), result]);
       }),
     );
-    setBalances(results);
     setLoading(false);
   }, []);
 
