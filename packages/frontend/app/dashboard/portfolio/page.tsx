@@ -10,7 +10,7 @@ import { MobileNav } from '@/components/layout/MobileNav';
 import { fetchMainnetBalancesFromChain } from '@/lib/chain';
 import { useSolPrice } from '@/lib/useSolPrice';
 
-const STORAGE_KEY = 'avanor_asset_dash_wallets';
+const STORAGE_KEY = 'avanor_portfolio_wallets';
 
 interface TrackedWallet {
   address: string;
@@ -42,7 +42,7 @@ function shortAddr(addr: string): string {
   return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 }
 
-export default function AssetsPage() {
+export default function PortfolioPage() {
   const { user } = usePrivy();
   const { wallets } = useSolanaWallets();
   const myAddress = wallets[0]?.address ?? null;
@@ -142,7 +142,7 @@ export default function AssetsPage() {
 
             <div className="mb-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-1">Portfolio</p>
-              <h1 className="text-2xl font-bold text-ivory">Asset Dash</h1>
+              <h1 className="text-2xl font-bold text-ivory">Portfolio</h1>
             </div>
 
             {/* Total net worth hero */}

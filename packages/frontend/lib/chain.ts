@@ -11,10 +11,10 @@ const RPC_URL = process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://api.devnet.solana
 const USDC_MINT = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
 const USDC_DECIMALS = 6;
 
-// Mainnet — used by the Asset Dash to read real-world wallet balances.
+// Mainnet — used by the Portfolio page to read real-world wallet balances.
 // The app's own banking flow runs on devnet (RPC_URL above), but
 // wallets a user adds to track will hold real mainnet funds.
-const MAINNET_RPC_URL = process.env.NEXT_PUBLIC_MAINNET_RPC || 'https://api.mainnet-beta.solana.com';
+const MAINNET_RPC_URL = process.env.NEXT_PUBLIC_MAINNET_RPC || 'https://solana-rpc.publicnode.com';
 const MAINNET_USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
 function getConnection() {

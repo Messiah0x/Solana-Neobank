@@ -38,6 +38,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: rgb(var(--color-bg));
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    overscroll-behavior-y: none;
   }
 
   /* For surfaces that are always rendered with a dark gradient (cards,
@@ -72,6 +77,15 @@
   .light .disabled\:opacity-40:disabled,
   .light .disabled\:opacity-50:disabled {
     opacity: 0.6 !important;
+  }
+
+  /* The accent-colored "Deposit" CTA uses a faint gold-on-tint style that
+     reads fine on dark surfaces but becomes nearly invisible on white when
+     dimmed for the disabled state. */
+  .light .text-accent.disabled\:opacity-40:disabled {
+    color: #9C7144;
+    background-color: rgba(156, 113, 68, 0.08);
+    opacity: 1 !important;
   }
 
   body {
