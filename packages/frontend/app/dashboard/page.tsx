@@ -73,8 +73,11 @@ export default function DashboardPage() {
       // Surface the actual error so we can diagnose — shown in "Connect Wallet" card
       console.error('[syncWallet]', err);
       setSyncFailed(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? '(not set — using localhost:4000)';
-      setError(`${err instanceof Error ? err.message : 'Failed to connect wallet'} · API: ${apiUrl}`);
+      setError(
+        err instanceof Error && err.message !== 'Network Error'
+          ? err.message
+          : "We couldn't reach Avanor's servers. Please try again in a moment.",
+      );
     } finally {
       setSyncing(false);
       setWalletChecked(true);

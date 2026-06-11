@@ -1,9 +1,12 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+// All API calls go through the same-origin proxy (/api/backend/* is rewritten
+// to the backend in next.config.mjs). Same-origin avoids CORS entirely and
+// shields mobile clients from cross-domain/DNS issues with the backend host.
+const API_BASE = '/api/backend';
 if (process.env.NODE_ENV === 'development') {
   // eslint-disable-next-line no-console
-  console.log('[API] baseURL:', API_BASE);
+  console.log('[API] baseURL:', API_BASE, '→', process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000');
 }
 
 const api = axios.create({
