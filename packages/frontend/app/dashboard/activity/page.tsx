@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import useSWR from 'swr';
@@ -9,6 +9,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { getWalletTransactions, getWallet } from '@/lib/api';
+import { fetchTransactionsFromChain } from '@/lib/chain';
 
 type Filter = 'all' | 'received' | 'sent' | 'yield';
 
@@ -168,14 +169,32 @@ export default function ActivityPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
 
+  const { wallets } = useSolanaWallets();
+  const privyAddress = wallets[0]?.address ?? null;
+
   const { data: wallet } = useSWR(
     userId ? `wallet-${userId}` : null,
-    () => getWallet(userId!),
+    async () => {
+      try {
+        return await getWallet(userId!);
+      } catch {
+        // Backend down — fall back to the Privy wallet address directly
+        return privyAddress ? { publicKey: privyAddress } : null;
+      }
+    },
   );
 
   const { data: transactions, isLoading } = useSWR(
     wallet && userId ? `tx-all-${userId}` : null,
-    () => getWalletTransactions(userId!, 50),
+    async () => {
+      try {
+        return await getWalletTransactions(userId!, 50);
+      } catch {
+        const pk = wallet?.publicKey ?? privyAddress;
+        if (!pk) throw new Error('No wallet');
+        return fetchTransactionsFromChain(pk, 50);
+      }
+    },
     { refreshInterval: 30_000 },
   );
 

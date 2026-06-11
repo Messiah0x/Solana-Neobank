@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -166,9 +166,19 @@ export default function SettingsPage() {
   const userId = user?.id ?? null;
   const [signingOut, setSigningOut] = useState(false);
 
+  const { wallets } = useSolanaWallets();
+  const privyAddress = wallets[0]?.address ?? null;
+
   const { data: wallet } = useSWR(
     userId ? `wallet-${userId}` : null,
-    () => getWallet(userId!),
+    async () => {
+      try {
+        return await getWallet(userId!);
+      } catch {
+        // Backend down — fall back to the Privy wallet address directly
+        return privyAddress ? { publicKey: privyAddress, createdAt: undefined as string | undefined } : null;
+      }
+    },
   );
 
   const { name, email, image, provider, initials } = getPrivyUserInfo(user ?? null);

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -11,6 +11,7 @@ import { DepositModal } from '@/components/yield/DepositModal';
 import { WithdrawModal } from '@/components/yield/WithdrawModal';
 import { getWallet, getWalletBalance, getYieldData, getYieldApy } from '@/lib/api';
 import { useYieldActions } from '@/lib/useYieldActions';
+import { fetchBalancesFromChain } from '@/lib/chain';
 
 function calcProjections(deposited: number, apy: number) {
   const daily = (deposited * (apy / 100)) / 365;
@@ -39,17 +40,33 @@ export default function YieldPage() {
   const { user } = usePrivy();
   const userId = user?.id ?? null;
   const yieldActions = useYieldActions(userId);
+  const { wallets } = useSolanaWallets();
+  const privyAddress = wallets[0]?.address ?? null;
 
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const { data: wallet } = useSWR(
     userId ? `wallet-${userId}` : null,
-    () => getWallet(userId!),
+    async () => {
+      try {
+        return await getWallet(userId!);
+      } catch {
+        // Backend down — fall back to the Privy wallet address directly
+        return privyAddress ? { publicKey: privyAddress } : null;
+      }
+    },
   );
   const { data: balance, mutate: mutateBalance } = useSWR(
     wallet ? `balance-${userId}` : null,
-    () => getWalletBalance(userId!),
+    async () => {
+      try {
+        return await getWalletBalance(userId!);
+      } catch {
+        if (!wallet?.publicKey) throw new Error('No wallet');
+        return fetchBalancesFromChain(wallet.publicKey);
+      }
+    },
     { refreshInterval: 30_000 },
   );
   const { data: yieldData, isLoading, mutate: mutateYield } = useSWR(

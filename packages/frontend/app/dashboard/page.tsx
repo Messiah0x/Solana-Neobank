@@ -24,6 +24,7 @@ import {
   getWalletTransactions,
   getYieldData,
 } from '@/lib/api';
+import { fetchBalancesFromChain, fetchTransactionsFromChain } from '@/lib/chain';
 
 export default function DashboardPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -38,7 +39,7 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [walletChecked, setWalletChecked] = useState(false);
-  const [syncFailed, setSyncFailed] = useState(false);
+  const [degraded, setDegraded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
@@ -59,7 +60,7 @@ export default function DashboardPage() {
     const pubkey = currentPublicKey ?? privyPublicKey;
     if (!userId || !pubkey) return;
     setSyncing(true);
-    setSyncFailed(false);
+    setDegraded(false);
     try {
       try {
         const w = await getWallet(userId);
@@ -70,14 +71,11 @@ export default function DashboardPage() {
         setWalletPublicKey(w.publicKey);
       }
     } catch (err) {
-      // Surface the actual error so we can diagnose — shown in "Connect Wallet" card
+      // Backend unreachable — degrade gracefully: use the Privy wallet
+      // directly and read balances/history straight from the chain.
       console.error('[syncWallet]', err);
-      setSyncFailed(true);
-      setError(
-        err instanceof Error && err.message !== 'Network Error'
-          ? err.message
-          : "We couldn't reach Avanor's servers. Please try again in a moment.",
-      );
+      setDegraded(true);
+      setWalletPublicKey(pubkey);
     } finally {
       setSyncing(false);
       setWalletChecked(true);
@@ -111,7 +109,15 @@ export default function DashboardPage() {
 
   const { data: balance, isLoading: balanceLoading, mutate: mutateBalance } = useSWR(
     walletPublicKey && userId ? `balance-${userId}` : null,
-    () => getWalletBalance(userId!),
+    async () => {
+      try {
+        return await getWalletBalance(userId!);
+      } catch {
+        // Backend down — read straight from the chain
+        setDegraded(true);
+        return fetchBalancesFromChain(walletPublicKey!);
+      }
+    },
     { refreshInterval: 30_000 },
   );
 
@@ -123,7 +129,14 @@ export default function DashboardPage() {
 
   const { data: transactions, isLoading: txLoading } = useSWR(
     walletPublicKey && userId ? `tx-${userId}` : null,
-    () => getWalletTransactions(userId!, 5),
+    async () => {
+      try {
+        return await getWalletTransactions(userId!, 5);
+      } catch {
+        setDegraded(true);
+        return fetchTransactionsFromChain(walletPublicKey!, 5);
+      }
+    },
     { refreshInterval: 30_000 },
   );
 
@@ -174,6 +187,12 @@ export default function DashboardPage() {
         <Header />
 
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-10">
+          {degraded && (
+            <div className="mx-4 mt-3 px-4 py-2.5 rounded-xl border border-warning/20 bg-warning/[0.06] text-warning/80 text-xs flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
+              Limited connectivity — balances read directly from Solana. Yield deposits are temporarily unavailable.
+            </div>
+          )}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
