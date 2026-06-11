@@ -22,6 +22,7 @@ interface Props {
   usdcBalance: number;
   userId: string;
   onDepositSuccess: () => void;
+  apy: number;
 }
 
 function StatRow({
@@ -43,12 +44,12 @@ function StatRow({
   );
 }
 
-export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDepositSuccess }: Props) {
+export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDepositSuccess, apy: fallbackApy }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const yieldActions = useYieldActions(userId);
 
-  const apy = yieldData?.apy ?? 8.4;
+  const apy = yieldData?.apy ?? fallbackApy;
   const hasPosition = yieldData?.hasPosition ?? false;
   const depositedAmount = yieldData?.depositedAmount ?? 0;
   const depositedAt = yieldData?.depositedAt ?? null;

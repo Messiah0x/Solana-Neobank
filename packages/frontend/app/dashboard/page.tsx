@@ -297,6 +297,7 @@ export default function DashboardPage() {
                     usdcBalance={balance?.usdc ?? 0}
                     userId={userId!}
                     onDepositSuccess={handleDepositSuccess}
+                    apy={apy}
                   />
                 </div>
 
