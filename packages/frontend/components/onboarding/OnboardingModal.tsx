@@ -82,7 +82,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
       setTimeout(() => setSolState('idle'), 3000);
     } catch {
       setSolState('error');
-      setTimeout(() => setSolState('idle'), 3000);
+      setTimeout(() => setSolState('idle'), 8000);
     }
   }
 
@@ -90,10 +90,10 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
     if (!publicKey || usdcState === 'loading') return;
     setUsdcState('loading');
     try {
-      const res = await fetch('https://spl-token-faucet.com/api/token/get', {
+      const res = await fetch('/api/faucet/usdc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: publicKey, token: 'USDC' }),
+        body: JSON.stringify({ address: publicKey }),
       });
       if (!res.ok) throw new Error(`Faucet returned ${res.status}`);
       setUsdcState('success');
@@ -101,7 +101,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
       setTimeout(() => setUsdcState('idle'), 3000);
     } catch {
       setUsdcState('error');
-      setTimeout(() => setUsdcState('idle'), 3000);
+      setTimeout(() => setUsdcState('idle'), 8000);
     }
   }
 
@@ -302,6 +302,18 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
                             </svg>
                             Received
                           </motion.span>
+                        ) : solState === 'error' ? (
+                          <motion.a
+                            key="sol-err"
+                            href={`https://faucet.solana.com/?address=${publicKey}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-xs text-red-400/80 hover:text-red-400 font-medium underline underline-offset-2 text-right"
+                          >
+                            Limit hit — use faucet.solana.com
+                          </motion.a>
                         ) : (
                           <motion.button
                             key="sol-btn"
@@ -360,14 +372,17 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
                             Received
                           </motion.span>
                         ) : usdcState === 'error' ? (
-                          <motion.span
+                          <motion.a
                             key="usdc-err"
+                            href="https://faucet.circle.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="text-xs text-red-400/80 font-medium"
+                            className="text-xs text-red-400/80 hover:text-red-400 font-medium underline underline-offset-2 text-right"
                           >
-                            Unavailable
-                          </motion.span>
+                            Down — use faucet.circle.com
+                          </motion.a>
                         ) : (
                           <motion.button
                             key="usdc-btn"

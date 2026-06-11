@@ -53,7 +53,8 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
       setTimeout(() => setAirdropState('idle'), 3000);
     } catch (err) {
       console.error('[airdrop]', err);
-      setAirdropState('idle');
+      setAirdropState('error');
+      setTimeout(() => setAirdropState('idle'), 6000);
     }
   }
 
@@ -61,10 +62,10 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
     if (!publicKey || usdcAirdropState === 'loading') return;
     setUsdcAirdropState('loading');
     try {
-      const res = await fetch('https://spl-token-faucet.com/api/token/get', {
+      const res = await fetch('/api/faucet/usdc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: publicKey, token: 'USDC' }),
+        body: JSON.stringify({ address: publicKey }),
       });
       if (!res.ok) throw new Error(`Faucet returned ${res.status}`);
       setUsdcAirdropState('success');
@@ -73,7 +74,7 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
     } catch (err) {
       console.error('[usdc faucet]', err);
       setUsdcAirdropState('error');
-      setTimeout(() => setUsdcAirdropState('idle'), 3000);
+      setTimeout(() => setUsdcAirdropState('idle'), 6000);
     }
   }
 
@@ -121,7 +122,7 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
-                className="font-mono font-bold text-5xl tracking-tight leading-none mb-1"
+                className="font-mono font-bold text-5xl tracking-tight leading-none mb-1 text-white"
               >
                 {solPrice > 0
                   ? `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -170,6 +171,19 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
                       </svg>
                       1 SOL added!
                     </motion.span>
+                  ) : airdropState === 'error' ? (
+                    <motion.a
+                      key="sol-error"
+                      href={`https://faucet.solana.com/?address=${publicKey}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="inline-flex items-center gap-1.5 text-xs text-red-400/80 hover:text-red-400 font-medium underline underline-offset-2"
+                    >
+                      Faucet limit hit — try faucet.solana.com
+                    </motion.a>
                   ) : (
                     <motion.button
                       key="sol-button"
@@ -220,18 +234,18 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
                       USDC sent!
                     </motion.span>
                   ) : usdcAirdropState === 'error' ? (
-                    <motion.span
+                    <motion.a
                       key="usdc-error"
+                      href="https://faucet.circle.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="inline-flex items-center gap-1.5 text-xs text-red-400/80 font-medium"
+                      className="inline-flex items-center gap-1.5 text-xs text-red-400/80 hover:text-red-400 font-medium underline underline-offset-2"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                      </svg>
-                      Faucet unavailable
-                    </motion.span>
+                      Faucet down — try faucet.circle.com
+                    </motion.a>
                   ) : (
                     <motion.button
                       key="usdc-button"
