@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
+import useSWR from 'swr';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
+import { getWalletBalance } from '@/lib/api';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -96,6 +98,12 @@ export default function CardPage() {
   const { user } = usePrivy();
   const { wallets } = useSolanaWallets();
   const { name } = getPrivyUserInfo(user ?? null);
+  const userId = user?.id ?? null;
+  const { data: balance } = useSWR(
+    userId ? `balance-${userId}` : null,
+    () => getWalletBalance(userId!),
+    { refreshInterval: 30_000 },
+  );
   const [frozen, setFrozen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -538,7 +546,11 @@ export default function CardPage() {
                   value: `$${transactions.reduce((sum, t) => sum + t.amount, 0).toFixed(2)}`,
                   sub: transactions.length ? `${transactions.length} simulated transaction${transactions.length === 1 ? '' : 's'}` : 'No limit set',
                 },
-                { label: 'Available', value: '$0.00', sub: 'Add funds to spend' },
+                {
+                  label: 'Available',
+                  value: `$${(balance?.usdc ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  sub: balance?.usdc ? 'USDC balance' : 'Add funds to spend',
+                },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-surface/40 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-white/25 mb-2">{s.label}</p>
