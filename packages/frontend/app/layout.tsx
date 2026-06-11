@@ -2,8 +2,20 @@ import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Inter } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
 import { PrivyAuthProvider } from '@/components/providers/PrivyAuthProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import './globals.css';
+
+const themeInitScript = `
+(function() {
+  try {
+    var theme = localStorage.getItem('avanor_theme');
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    }
+  } catch (e) {}
+})();
+`;
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -37,10 +49,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${GeistMono.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="bg-background text-white antialiased">
-          <PrivyAuthProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </PrivyAuthProvider>
+          <ThemeProvider>
+            <PrivyAuthProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </PrivyAuthProvider>
+          </ThemeProvider>
         </body>
     </html>
   );

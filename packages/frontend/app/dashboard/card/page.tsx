@@ -417,7 +417,7 @@ export default function CardPage() {
                     disabled={frozen}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 ${
                       spendAmount === amt
-                        ? 'bg-accent text-background'
+                        ? 'bg-accent text-[#0A0A0A]'
                         : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08]'
                     } ${frozen ? 'opacity-40 cursor-not-allowed' : ''}`}
                   >
@@ -458,7 +458,7 @@ export default function CardPage() {
                 onClick={handleSimulatePurchase}
                 disabled={frozen}
                 className={`w-full py-3 rounded-xl font-semibold text-sm transition-opacity ${
-                  frozen ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-accent text-background hover:opacity-90'
+                  frozen ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-accent text-[#0A0A0A] hover:opacity-90'
                 }`}
               >
                 {doubleOrNothing ? `Pay $${spendAmount} — Flip the coin` : `Pay $${spendAmount}`}

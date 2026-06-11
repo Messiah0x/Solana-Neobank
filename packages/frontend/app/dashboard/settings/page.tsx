@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { getWallet } from '@/lib/api';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
+import { useTheme } from '@/components/providers/ThemeProvider';
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/25 mb-2 px-1">{children}</p>;
@@ -39,6 +40,27 @@ function SettingsRow({
       </div>
       {action}
     </div>
+  );
+}
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isLight = theme === 'light';
+
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+        isLight ? 'bg-accent' : 'bg-white/15'
+      }`}
+    >
+      <motion.div
+        className="absolute top-0.5 w-5 h-5 rounded-full bg-background"
+        animate={{ x: isLight ? 22 : 2 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      />
+    </button>
   );
 }
 
@@ -151,7 +173,7 @@ function ReserveCard() {
         className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${
           joined
             ? 'bg-white/[0.04] text-white/30 cursor-default'
-            : 'bg-accent text-background hover:opacity-90'
+            : 'bg-accent text-[#0A0A0A] hover:opacity-90'
         }`}
       >
         {joined ? "You're on the waitlist ✓" : 'Join the waitlist'}
@@ -165,6 +187,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const userId = user?.id ?? null;
   const [signingOut, setSigningOut] = useState(false);
+  const { theme } = useTheme();
 
   const { wallets } = useSolanaWallets();
   const privyAddress = wallets[0]?.address ?? null;
@@ -270,6 +293,19 @@ export default function SettingsPage() {
                     />
                   </>
                 )}
+              </div>
+            </motion.div>
+
+            {/* Preferences */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11, duration: 0.3 }}>
+              <SectionLabel>Preferences</SectionLabel>
+              <div className="rounded-2xl border border-white/[0.06] bg-surface/30 overflow-hidden">
+                <SettingsRow
+                  label="Appearance"
+                  value={theme === 'light' ? 'Light mode' : 'Dark mode'}
+                  sub="Switch between dark and light themes"
+                  action={<ThemeToggle />}
+                />
               </div>
             </motion.div>
 

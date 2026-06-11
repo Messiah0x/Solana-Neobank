@@ -155,7 +155,7 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
               </div>
               <button
                 onClick={() => onResolved(result, finalAmount)}
-                className="w-full py-3 rounded-xl font-semibold text-sm bg-accent text-background hover:opacity-90 transition-opacity"
+                className="w-full py-3 rounded-xl font-semibold text-sm bg-accent text-[#0A0A0A] hover:opacity-90 transition-opacity"
               >
                 Done
               </button>

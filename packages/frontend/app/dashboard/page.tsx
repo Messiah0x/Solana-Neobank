@@ -244,7 +244,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => syncWallet()}
                     disabled={syncing}
-                    className="w-full py-3 rounded-xl bg-accent text-background text-sm font-semibold hover:bg-accent/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    className="w-full py-3 rounded-xl bg-accent text-[#0A0A0A] text-sm font-semibold hover:bg-accent/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
                     {syncing ? 'Connecting…' : 'Connect Wallet'}
                   </button>

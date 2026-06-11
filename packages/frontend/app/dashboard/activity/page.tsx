@@ -257,7 +257,7 @@ export default function ActivityPage() {
                   onClick={() => setFilter(f.key)}
                   className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
                     filter === f.key
-                      ? 'bg-accent text-background'
+                      ? 'bg-accent text-[#0A0A0A]'
                       : 'bg-white/[0.05] text-white/40 hover:text-white/60 border border-white/[0.06]'
                   }`}
                 >

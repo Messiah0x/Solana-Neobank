@@ -10,11 +10,28 @@
     --accent: #D4AF7F;
     --gold: #D4AF7F;
     --ivory: #F7F5F0;
+
+    /* Theme tokens — dark mode (default) */
+    --color-bg: 10 10 10;
+    --color-surface: 17 17 17;
+    --color-elevated: 26 26 26;
+    --color-muted: 34 34 34;
+    --color-fg: 255 255 255;
+    --color-ivory: 247 245 240;
+  }
+
+  :root.light {
+    --color-bg: 247 247 245;
+    --color-surface: 255 255 255;
+    --color-elevated: 255 255 255;
+    --color-muted: 237 237 234;
+    --color-fg: 10 10 10;
+    --color-ivory: 28 24 18;
   }
 
   * {
     box-sizing: border-box;
-    border-color: rgba(255, 255, 255, 0.06);
+    border-color: rgb(var(--color-fg) / 0.06);
   }
 
   html {
@@ -23,9 +40,10 @@
   }
 
   body {
-    background-color: #0A0E1A;
-    color: #ffffff;
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-fg));
     font-family: var(--font-inter), system-ui, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   /* Thin scrollbar */
@@ -37,11 +55,11 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgb(var(--color-fg) / 0.08);
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgb(var(--color-fg) / 0.15);
   }
 
   /* Selection */
@@ -57,9 +75,9 @@
   }
 
   .glass {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgb(var(--color-fg) / 0.03);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgb(var(--color-fg) / 0.06);
   }
 
   /* iPhone safe area */

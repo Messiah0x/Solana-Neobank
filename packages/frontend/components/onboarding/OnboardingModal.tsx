@@ -227,7 +227,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
 
                   <button
                     onClick={goNext}
-                    className="w-full py-3.5 rounded-2xl font-semibold text-sm text-background transition-all hover:opacity-90 active:scale-[0.98]"
+                    className="w-full py-3.5 rounded-2xl font-semibold text-sm text-[#0A0A0A] transition-all hover:opacity-90 active:scale-[0.98]"
                     style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
                   >
                     Get Started
@@ -405,7 +405,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
 
                   <button
                     onClick={goNext}
-                    className="w-full py-3.5 rounded-2xl font-semibold text-sm text-background transition-all hover:opacity-90 active:scale-[0.98]"
+                    className="w-full py-3.5 rounded-2xl font-semibold text-sm text-[#0A0A0A] transition-all hover:opacity-90 active:scale-[0.98]"
                     style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
                   >
                     Next
@@ -465,7 +465,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
 
                   <button
                     onClick={goToYield}
-                    className="w-full py-3.5 rounded-2xl font-semibold text-sm text-background transition-all hover:opacity-90 active:scale-[0.98] mb-3"
+                    className="w-full py-3.5 rounded-2xl font-semibold text-sm text-[#0A0A0A] transition-all hover:opacity-90 active:scale-[0.98] mb-3"
                     style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
                   >
                     Go to Yield

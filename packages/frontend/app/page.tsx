@@ -25,7 +25,7 @@ export default function HomePage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="px-4 py-2 bg-accent hover:bg-accent-hover text-background text-sm font-semibold rounded-lg transition-colors"
+            className="px-4 py-2 bg-accent hover:bg-accent-hover text-[#0A0A0A] text-sm font-semibold rounded-lg transition-colors"
           >
             Sign In
           </motion.button>
@@ -72,7 +72,7 @@ export default function HomePage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-8 py-3.5 font-semibold rounded-xl transition-colors text-sm text-background"
+                  className="px-8 py-3.5 font-semibold rounded-xl transition-colors text-sm text-[#0A0A0A]"
                   style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
                 >
                   Get Started

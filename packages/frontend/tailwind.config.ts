@@ -9,17 +9,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#0A0A0A',
-        surface: '#111111',
-        elevated: '#1A1A1A',
-        muted: '#222222',
+        background: 'rgb(var(--color-bg) / <alpha-value>)',
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',
+        elevated: 'rgb(var(--color-elevated) / <alpha-value>)',
+        muted: 'rgb(var(--color-muted) / <alpha-value>)',
+        white: 'rgb(var(--color-fg) / <alpha-value>)',
         accent: '#D4AF7F',
         'accent-hover': '#C49A65',
         'accent-muted': 'rgba(212, 175, 127, 0.10)',
         'accent-border': 'rgba(212, 175, 127, 0.20)',
         gold: '#D4AF7F',
         'gold-soft': '#B18C5A',
-        ivory: '#F7F5F0',
+        ivory: 'rgb(var(--color-ivory) / <alpha-value>)',
         success: '#10B981',
         error: '#EF4444',
         warning: '#F59E0B',
