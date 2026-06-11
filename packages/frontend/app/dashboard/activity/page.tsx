@@ -20,6 +20,7 @@ interface Transaction {
   type: 'sent' | 'received' | 'other';
   amount: number | null;
   counterparty: string | null;
+  token?: 'USDC' | 'SOL' | null;
 }
 
 function formatTime(ms: number): string {
@@ -74,16 +75,17 @@ function TxIcon({ type }: { type: 'sent' | 'received' | 'other' }) {
   );
 }
 
-function formatAmount(amount: number | null, type: 'sent' | 'received' | 'other'): string | null {
+function formatAmount(
+  amount: number | null,
+  type: 'sent' | 'received' | 'other',
+  token: 'USDC' | 'SOL' | null,
+): string | null {
   if (amount === null || amount === 0) return null;
   const sign = type === 'received' ? '+' : type === 'sent' ? '-' : '';
-  // Heuristic: USDC amounts tend to be whole or 2-decimal, SOL is usually <10
   const formatted = amount >= 0.01 && amount < 10000
     ? amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
     : amount.toFixed(6);
-  // If amount looks like USDC (integer or 2 decimals), show USDC; else SOL
-  const unit = Number.isInteger(amount) || (amount * 100) % 1 === 0 ? 'USDC' : 'SOL';
-  return `${sign}${formatted} ${unit}`;
+  return `${sign}${formatted}${token ? ` ${token}` : ''}`;
 }
 
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
@@ -93,7 +95,7 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
     : null;
   const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
   const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
-  const amountStr = formatAmount(tx.amount, tx.type);
+  const amountStr = formatAmount(tx.amount, tx.type, tx.token ?? null);
   const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';
 
   return (

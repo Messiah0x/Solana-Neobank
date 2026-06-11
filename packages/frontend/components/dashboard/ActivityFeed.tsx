@@ -10,6 +10,7 @@ interface Transaction {
   type: 'sent' | 'received' | 'other';
   amount: number | null;
   counterparty: string | null;
+  token?: 'USDC' | 'SOL' | null;
 }
 
 interface Props {
@@ -29,12 +30,15 @@ function timeAgo(ms: number): string {
   return `${days}d ago`;
 }
 
-function formatAmount(amount: number | null, type: 'sent' | 'received' | 'other'): string | null {
+function formatAmount(
+  amount: number | null,
+  type: 'sent' | 'received' | 'other',
+  token: 'USDC' | 'SOL' | null,
+): string | null {
   if (amount === null || amount === 0) return null;
   const sign = type === 'received' ? '+' : type === 'sent' ? '-' : '';
   const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-  const unit = Number.isInteger(amount) || (amount * 100) % 1 === 0 ? 'USDC' : 'SOL';
-  return `${sign}${formatted} ${unit}`;
+  return `${sign}${formatted}${token ? ` ${token}` : ''}`;
 }
 
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
@@ -44,7 +48,7 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
     : null;
   const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
   const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
-  const amountStr = formatAmount(tx.amount, tx.type);
+  const amountStr = formatAmount(tx.amount, tx.type, tx.token ?? null);
   const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';
 
   const iconBg = tx.type === 'received'

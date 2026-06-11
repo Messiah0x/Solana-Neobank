@@ -45,12 +45,12 @@ const LAMPORTS = LAMPORTS_PER_SOL;
 function enrichTransaction(
   publicKey: string,
   parsed: Awaited<ReturnType<typeof connection.getParsedTransactions>>[number],
-): { type: 'sent' | 'received' | 'other'; amount: number | null; counterparty: string | null } {
-  if (!parsed) return { type: 'other', amount: null, counterparty: null };
+): { type: 'sent' | 'received' | 'other'; amount: number | null; counterparty: string | null; token: 'USDC' | 'SOL' | null } {
+  if (!parsed) return { type: 'other', amount: null, counterparty: null, token: null };
 
   const meta = parsed.meta;
   const message = parsed.transaction?.message;
-  if (!meta || !message) return { type: 'other', amount: null, counterparty: null };
+  if (!meta || !message) return { type: 'other', amount: null, counterparty: null, token: null };
 
   // Collect ordered account keys (handles both legacy and versioned messages)
   const accountKeys: string[] = [];
@@ -87,7 +87,7 @@ function enrichTransaction(
         const addr = b.owner ?? accountKeys[b.accountIndex];
         if (addr && addr !== publicKey) { counterparty = addr; break; }
       }
-      return { type, amount: Math.abs(delta), counterparty };
+      return { type, amount: Math.abs(delta), counterparty, token: 'USDC' };
     }
   }
 
@@ -111,11 +111,11 @@ function enrichTransaction(
         if (type === 'sent' && d > bestDelta) { bestDelta = d; counterparty = accountKeys[i]; }
         if (type === 'received' && d < bestDelta) { bestDelta = d; counterparty = accountKeys[i]; }
       }
-      return { type, amount: Math.abs(delta), counterparty };
+      return { type, amount: Math.abs(delta), counterparty, token: 'SOL' };
     }
   }
 
-  return { type: 'other', amount: null, counterparty: null };
+  return { type: 'other', amount: null, counterparty: null, token: null };
 }
 
 export async function getRecentTransactions(publicKey: string, limit = 10) {
@@ -140,6 +140,7 @@ export async function getRecentTransactions(publicKey: string, limit = 10) {
       type: enriched.type,
       amount: enriched.amount,
       counterparty: enriched.counterparty,
+      token: enriched.token,
     };
   });
 }
