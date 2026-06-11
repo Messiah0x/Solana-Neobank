@@ -12,6 +12,13 @@ const withdrawBody = z.object({
   amountUsdc: z.number().positive(),
 });
 
+const confirmBody = z.object({
+  userId: z.string().min(1).max(128),
+  amountUsdc: z.number().positive(),
+  signature: z.string().min(32).max(128),
+  marginfiAccountPk: z.string().min(32).max(64),
+});
+
 function handleError(err: unknown, reply: FastifyReply) {
   const error = err as Error & { code?: string };
   if (error.code === 'NOT_FOUND') return reply.code(404).send({ success: false, error: error.message });
@@ -38,6 +45,62 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
       const data = await yieldService.getYieldData(userId);
       return reply.send({ success: true, data });
     } catch (err) {
+      return handleError(err, reply);
+    }
+  });
+
+  // POST /api/yield/deposit/prepare — build an unsigned tx for client-side signing
+  fastify.post('/deposit/prepare', async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { userId, amountUsdc } = depositBody.parse(req.body);
+      const result = await yieldService.prepareDeposit(userId, amountUsdc);
+      return reply.send({ success: true, data: result });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return reply.code(400).send({ success: false, error: err.errors });
+      }
+      return handleError(err, reply);
+    }
+  });
+
+  // POST /api/yield/deposit/confirm — verify the signed tx landed, record position
+  fastify.post('/deposit/confirm', async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { userId, amountUsdc, signature, marginfiAccountPk } = confirmBody.parse(req.body);
+      const result = await yieldService.confirmDeposit(userId, amountUsdc, signature, marginfiAccountPk);
+      return reply.code(201).send({ success: true, data: result });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return reply.code(400).send({ success: false, error: err.errors });
+      }
+      return handleError(err, reply);
+    }
+  });
+
+  // POST /api/yield/withdraw/prepare
+  fastify.post('/withdraw/prepare', async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { userId, amountUsdc } = withdrawBody.parse(req.body);
+      const result = await yieldService.prepareWithdraw(userId, amountUsdc);
+      return reply.send({ success: true, data: result });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return reply.code(400).send({ success: false, error: err.errors });
+      }
+      return handleError(err, reply);
+    }
+  });
+
+  // POST /api/yield/withdraw/confirm
+  fastify.post('/withdraw/confirm', async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { userId, amountUsdc, signature } = confirmBody.omit({ marginfiAccountPk: true }).parse(req.body);
+      const result = await yieldService.confirmWithdraw(userId, amountUsdc, signature);
+      return reply.send({ success: true, data: result });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return reply.code(400).send({ success: false, error: err.errors });
+      }
       return handleError(err, reply);
     }
   });

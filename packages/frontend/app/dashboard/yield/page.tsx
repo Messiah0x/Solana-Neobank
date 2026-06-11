@@ -9,7 +9,8 @@ import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { DepositModal } from '@/components/yield/DepositModal';
 import { WithdrawModal } from '@/components/yield/WithdrawModal';
-import { getWallet, getWalletBalance, getYieldData, getYieldApy, depositUsdc, withdrawUsdc } from '@/lib/api';
+import { getWallet, getWalletBalance, getYieldData, getYieldApy } from '@/lib/api';
+import { useYieldActions } from '@/lib/useYieldActions';
 
 function calcProjections(deposited: number, apy: number) {
   const daily = (deposited * (apy / 100)) / 365;
@@ -37,6 +38,7 @@ function ProjectionCard({ label, value, delay }: { label: string; value: number;
 export default function YieldPage() {
   const { user } = usePrivy();
   const userId = user?.id ?? null;
+  const yieldActions = useYieldActions(userId);
 
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -66,12 +68,12 @@ export default function YieldPage() {
   const usdcAvailable = balance?.usdc ?? 0;
 
   async function handleDeposit(amount: number) {
-    await depositUsdc(userId!, amount);
+    await yieldActions.deposit(amount);
     await Promise.all([mutateYield(), mutateBalance()]);
   }
 
   async function handleWithdraw(amount: number) {
-    await withdrawUsdc(userId!, amount);
+    await yieldActions.withdraw(amount);
     await Promise.all([mutateYield(), mutateBalance()]);
   }
 

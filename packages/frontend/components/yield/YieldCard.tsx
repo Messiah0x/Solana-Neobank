@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { YieldTicker } from './YieldTicker';
 import { DepositModal } from './DepositModal';
 import { WithdrawModal } from './WithdrawModal';
-import { depositUsdc, withdrawUsdc } from '@/lib/api';
+import { useYieldActions } from '@/lib/useYieldActions';
 
 interface YieldData {
   hasPosition: boolean;
@@ -46,6 +46,7 @@ function StatRow({
 export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDepositSuccess }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+  const yieldActions = useYieldActions(userId);
 
   const apy = yieldData?.apy ?? 8.4;
   const hasPosition = yieldData?.hasPosition ?? false;
@@ -56,12 +57,12 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
   const monthlyYield = (usdcBalance * (apy / 100)) / 12;
 
   async function handleDeposit(amount: number) {
-    await depositUsdc(userId, amount);
+    await yieldActions.deposit(amount);
     onDepositSuccess();
   }
 
   async function handleWithdraw(amount: number) {
-    await withdrawUsdc(userId, amount);
+    await yieldActions.withdraw(amount);
     onDepositSuccess();
   }
 

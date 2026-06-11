@@ -1,9 +1,9 @@
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { MarginfiAccountWrapper } from '@mrgnlabs/marginfi-client-v2';
 import { prisma } from '../lib/prisma';
 import { decryptPrivateKey } from '../lib/encryption';
-import { createMarginfiClient } from '../lib/marginfi';
-import { NETWORK } from '../lib/helius';
+import { createMarginfiClient, createMarginfiClientForPubkey } from '../lib/marginfi';
+import { connection, NETWORK } from '../lib/helius';
 import { resolveDbUserId } from '../lib/user';
 
 const USDC_MINT: Record<string, string> = {
@@ -121,6 +121,138 @@ export async function withdraw(userId: string, amountUsdc: number) {
     data: { depositAmount: Math.max(0, position.depositAmount - amountUsdc) },
   });
 
+  return { signature };
+}
+
+async function getUserPublicKey(dbUserId: string): Promise<PublicKey> {
+  const wallet = await prisma.wallet.findUnique({ where: { userId: dbUserId } });
+  if (!wallet) throw Object.assign(new Error('Wallet not found'), { code: 'NOT_FOUND' });
+  return new PublicKey(wallet.publicKey);
+}
+
+async function buildUnsignedTx(
+  instructions: TransactionInstruction[],
+  feePayer: PublicKey,
+  partialSigners: Keypair[] = [],
+) {
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+  const tx = new Transaction({ feePayer, blockhash, lastValidBlockHeight });
+  tx.add(...instructions);
+  if (partialSigners.length > 0) tx.partialSign(...partialSigners);
+  return {
+    transaction: tx.serialize({ requireAllSignatures: false, verifySignatures: false }).toString('base64'),
+    blockhash,
+    lastValidBlockHeight,
+  };
+}
+
+// Non-custodial deposit flow for Privy wallets: the backend builds the
+// transaction, the user's wallet signs it client-side. First-time users get
+// a marginfi-account-creation step before the deposit step.
+export async function prepareDeposit(userId: string, amountUsdc: number) {
+  if (amountUsdc <= 0) throw new Error('Amount must be positive');
+  const dbUserId = await resolveDbUserId(userId);
+  const userPk = await getUserPublicKey(dbUserId);
+  const client = await createMarginfiClientForPubkey(userPk);
+
+  const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
+  const bank = client.getBankByMint(usdcMint);
+  if (!bank) throw new Error('USDC bank not found on Marginfi');
+
+  const accounts = await client.getMarginfiAccountsForAuthority(userPk);
+  if (accounts.length === 0) {
+    // Step 1: create the marginfi account. The new account's keypair is a
+    // throwaway signer we partial-sign here; the user signs as fee payer.
+    const accountKeypair = Keypair.generate();
+    const ixs = await client.makeCreateMarginfiAccountIx(accountKeypair.publicKey);
+    const built = await buildUnsignedTx(ixs.instructions, userPk, [accountKeypair]);
+    return { step: 'createAccount' as const, marginfiAccountPk: accountKeypair.publicKey.toString(), ...built };
+  }
+
+  const marginfiAccount = accounts[0];
+  const ixs = await marginfiAccount.makeDepositIx(amountUsdc, bank.address);
+  const built = await buildUnsignedTx(ixs.instructions, userPk);
+  return { step: 'deposit' as const, marginfiAccountPk: marginfiAccount.address.toString(), ...built };
+}
+
+export async function prepareWithdraw(userId: string, amountUsdc: number) {
+  if (amountUsdc <= 0) throw new Error('Amount must be positive');
+  const dbUserId = await resolveDbUserId(userId);
+  const position = await prisma.yieldPosition.findUnique({ where: { userId: dbUserId } });
+  if (!position?.marginfiAccountPk)
+    throw Object.assign(new Error('No yield position found'), { code: 'NOT_FOUND' });
+
+  const userPk = await getUserPublicKey(dbUserId);
+  const client = await createMarginfiClientForPubkey(userPk);
+
+  const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
+  const bank = client.getBankByMint(usdcMint);
+  if (!bank) throw new Error('USDC bank not found');
+
+  const marginfiAccount = await MarginfiAccountWrapper.fetch(
+    new PublicKey(position.marginfiAccountPk),
+    client,
+  );
+  const ixs = await marginfiAccount.makeWithdrawIx(amountUsdc, bank.address);
+  const built = await buildUnsignedTx(ixs.instructions, userPk);
+  return { step: 'withdraw' as const, marginfiAccountPk: position.marginfiAccountPk, ...built };
+}
+
+async function assertTxConfirmed(signature: string) {
+  // Poll briefly — the client already waited for confirmation, this is a
+  // server-side double-check before we trust the result.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { value } = await connection.getSignatureStatuses([signature], {
+      searchTransactionHistory: true,
+    });
+    const status = value[0];
+    if (status) {
+      if (status.err) throw new Error('Transaction failed on-chain');
+      if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') return;
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  throw new Error('Transaction not confirmed — try again');
+}
+
+export async function confirmDeposit(
+  userId: string,
+  amountUsdc: number,
+  signature: string,
+  marginfiAccountPk: string,
+) {
+  if (amountUsdc <= 0) throw new Error('Amount must be positive');
+  const dbUserId = await resolveDbUserId(userId);
+  await assertTxConfirmed(signature);
+
+  await prisma.yieldPosition.upsert({
+    where: { userId: dbUserId },
+    create: {
+      userId: dbUserId,
+      depositAmount: amountUsdc,
+      depositedAt: new Date(),
+      protocol: 'marginfi',
+      marginfiAccountPk,
+    },
+    update: {
+      depositAmount: { increment: amountUsdc },
+      marginfiAccountPk,
+    },
+  });
+  return { signature };
+}
+
+export async function confirmWithdraw(userId: string, amountUsdc: number, signature: string) {
+  if (amountUsdc <= 0) throw new Error('Amount must be positive');
+  const dbUserId = await resolveDbUserId(userId);
+  const position = await prisma.yieldPosition.findUnique({ where: { userId: dbUserId } });
+  if (!position) throw Object.assign(new Error('No yield position found'), { code: 'NOT_FOUND' });
+  await assertTxConfirmed(signature);
+
+  await prisma.yieldPosition.update({
+    where: { userId: dbUserId },
+    data: { depositAmount: Math.max(0, position.depositAmount - amountUsdc) },
+  });
   return { signature };
 }
 

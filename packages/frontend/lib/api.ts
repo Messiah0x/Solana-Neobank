@@ -69,12 +69,40 @@ export async function getYieldData(userId: string): Promise<{
   return data.data;
 }
 
-export async function depositUsdc(userId: string, amountUsdc: number) {
-  const { data } = await api.post('/api/yield/deposit', { userId, amountUsdc });
+export interface PreparedYieldTx {
+  step: 'createAccount' | 'deposit' | 'withdraw';
+  marginfiAccountPk: string;
+  transaction: string; // base64-serialized, unsigned (user is fee payer)
+  blockhash: string;
+  lastValidBlockHeight: number;
+}
+
+export async function prepareDeposit(userId: string, amountUsdc: number): Promise<PreparedYieldTx> {
+  const { data } = await api.post('/api/yield/deposit/prepare', { userId, amountUsdc });
   return data.data;
 }
 
-export async function withdrawUsdc(userId: string, amountUsdc: number) {
-  const { data } = await api.post('/api/yield/withdraw', { userId, amountUsdc });
+export async function confirmDeposit(
+  userId: string,
+  amountUsdc: number,
+  signature: string,
+  marginfiAccountPk: string,
+) {
+  const { data } = await api.post('/api/yield/deposit/confirm', {
+    userId,
+    amountUsdc,
+    signature,
+    marginfiAccountPk,
+  });
+  return data.data;
+}
+
+export async function prepareWithdraw(userId: string, amountUsdc: number): Promise<PreparedYieldTx> {
+  const { data } = await api.post('/api/yield/withdraw/prepare', { userId, amountUsdc });
+  return data.data;
+}
+
+export async function confirmWithdraw(userId: string, amountUsdc: number, signature: string) {
+  const { data } = await api.post('/api/yield/withdraw/confirm', { userId, amountUsdc, signature });
   return data.data;
 }
