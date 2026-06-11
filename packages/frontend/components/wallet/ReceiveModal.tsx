@@ -12,9 +12,14 @@ export function ReceiveModal({ publicKey, onClose }: Props) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(publicKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(publicKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable (permissions/insecure context) — leave the
+      // address visible for manual copy.
+    }
   }
 
   return (

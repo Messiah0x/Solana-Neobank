@@ -28,9 +28,13 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
 
   async function handleCopyAddress() {
     if (!publicKey) return;
-    await navigator.clipboard.writeText(publicKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(publicKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — ignore; the receive modal shows the full address.
+    }
   }
 
   async function handleAirdrop() {

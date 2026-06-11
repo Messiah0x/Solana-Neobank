@@ -105,7 +105,7 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
                 <p className="text-xs text-white/35 uppercase tracking-wider font-semibold">Amount</p>
                 <button
                   type="button"
-                  onClick={() => setAmount(depositedAmount.toFixed(2))}
+                  onClick={() => setAmount(String(depositedAmount))}
                   className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
                 >
                   Withdraw All

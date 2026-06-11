@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSolanaWallets } from '@privy-io/react-auth';
 import { useToast } from '@/lib/useToast';
@@ -50,6 +50,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
+  const sendingRef = useRef(false);
   const [txSig, setTxSig] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -69,7 +70,8 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
   }
 
   async function handleSend() {
-    if (!canSubmit || !wallet) return;
+    if (!canSubmit || !wallet || sendingRef.current) return;
+    sendingRef.current = true;
     setPhase('sending');
     setErrorMsg(null);
 
@@ -131,6 +133,8 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
       setErrorMsg(msg);
       setPhase('error');
       toast.error(`Send failed: ${msg}`);
+    } finally {
+      sendingRef.current = false;
     }
   }
 
