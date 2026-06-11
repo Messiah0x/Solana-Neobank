@@ -41,6 +41,15 @@ const tabs = [
     ),
   },
   {
+    label: 'Assets',
+    href: '/dashboard/assets',
+    icon: (active: boolean) => (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12a9.75 9.75 0 1019.5 0 9.75 9.75 0 00-19.5 0zM12 6.75v6l3.75 2.25" />
+      </svg>
+    ),
+  },
+  {
     label: 'Settings',
     href: '/dashboard/settings',
     icon: (active: boolean) => (

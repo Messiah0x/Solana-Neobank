@@ -84,10 +84,10 @@ function ControlButton({ icon, label, active, onClick, disabled }: ControlButton
         active
           ? 'border-accent/30 bg-accent/[0.08]'
           : 'border-white/[0.07] bg-surface/50 hover:bg-white/[0.04]'
-      } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+      } ${disabled ? 'cursor-not-allowed' : ''}`}
     >
-      <span className={active ? 'text-accent' : 'text-white/40'}>{icon}</span>
-      <span className={`text-[11px] font-semibold tracking-wide ${active ? 'text-accent' : 'text-white/35'}`}>
+      <span className={active ? 'text-accent' : disabled ? 'text-white/25' : 'text-white/40'}>{icon}</span>
+      <span className={`text-[11px] font-semibold tracking-wide ${active ? 'text-accent' : disabled ? 'text-white/25' : 'text-white/35'}`}>
         {label}
       </span>
     </motion.button>
