@@ -457,6 +457,40 @@ export default function CardPage() {
               </button>
             </motion.div>
 
+            {/* Coin flip stats — provable transparency for Double or Nothing */}
+            {transactions.some((t) => t.doubleOrNothing) && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.13, duration: 0.4 }}
+                className="rounded-2xl p-4 mb-6 border border-white/[0.06] bg-surface/40"
+              >
+                {(() => {
+                  const flips = transactions.filter((t) => t.doubleOrNothing);
+                  const heads = flips.filter((t) => t.result === 'heads').length;
+                  const tails = flips.length - heads;
+                  const headsPct = Math.round((heads / flips.length) * 100);
+                  return (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-semibold text-ivory">Your flip record</p>
+                        <p className="text-[11px] text-white/30">{flips.length} flip{flips.length === 1 ? '' : 's'}</p>
+                      </div>
+                      <div className="flex h-2 rounded-full overflow-hidden bg-white/[0.06] mb-3">
+                        <div className="bg-green-400/70" style={{ width: `${headsPct}%` }} />
+                        <div className="bg-red-400/60" style={{ width: `${100 - headsPct}%` }} />
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-green-400/80 font-semibold">{heads} heads · free</span>
+                        <span className="text-white/25">fair 50/50 odds</span>
+                        <span className="text-red-400/80 font-semibold">{tails} tails · 2x</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </motion.div>
+            )}
+
             {/* Premium launch notice */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}

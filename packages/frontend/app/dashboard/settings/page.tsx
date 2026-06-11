@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
@@ -100,6 +100,64 @@ function ProviderBadge({ provider }: { provider?: string }) {
     );
   }
   return null;
+}
+
+const RESERVE_WAITLIST_KEY = 'avanor_reserve_waitlist';
+
+function ReserveCard() {
+  const [joined, setJoined] = useState(false);
+
+  useEffect(() => {
+    try {
+      setJoined(localStorage.getItem(RESERVE_WAITLIST_KEY) === '1');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function join() {
+    try {
+      localStorage.setItem(RESERVE_WAITLIST_KEY, '1');
+    } catch {
+      // ignore
+    }
+    setJoined(true);
+  }
+
+  return (
+    <div
+      className="rounded-2xl p-5"
+      style={{
+        background: 'linear-gradient(135deg, rgba(212,175,127,0.10) 0%, rgba(212,175,127,0.03) 100%)',
+        border: '1px solid rgba(212,175,127,0.18)',
+      }}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <p className="text-sm font-bold text-accent">Avanor Reserve</p>
+        <span
+          className="text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide"
+          style={{ background: 'rgba(212,175,127,0.12)', color: 'rgba(212,175,127,0.7)', border: '1px solid rgba(212,175,127,0.2)' }}
+        >
+          Coming soon
+        </span>
+      </div>
+      <p className="text-xs text-white/40 leading-relaxed mb-4">
+        Our premium tier: zero performance fees on yield, priority access to the Visa card,
+        higher daily limits, and a dedicated concierge line.
+      </p>
+      <button
+        onClick={join}
+        disabled={joined}
+        className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${
+          joined
+            ? 'bg-white/[0.04] text-white/30 cursor-default'
+            : 'bg-accent text-background hover:opacity-90'
+        }`}
+      >
+        {joined ? "You're on the waitlist ✓" : 'Join the waitlist'}
+      </button>
+    </div>
+  );
 }
 
 export default function SettingsPage() {
@@ -257,6 +315,12 @@ export default function SettingsPage() {
                   sub="Privy's secure enclave · You hold your keys"
                 />
               </div>
+            </motion.div>
+
+            {/* Avanor Reserve */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23, duration: 0.3 }}>
+              <SectionLabel>Membership</SectionLabel>
+              <ReserveCard />
             </motion.div>
 
             {/* Sign out */}

@@ -6,7 +6,7 @@ import { AvanorLogo } from '@/components/brand/AvanorLogo';
 
 const stats = [
   { label: 'Settlement speed', value: '<400ms' },
-  { label: 'Target APY', value: '8.4%' },
+  { label: 'APY after fees', value: 'Up to 7.6%' },
   { label: 'Network', value: 'Solana' },
 ];
 
@@ -97,6 +97,15 @@ export default function HomePage() {
           </motion.div>
         </div>
       </main>
+
+      {/* Footer disclaimer */}
+      <footer className="relative z-10 py-6 px-6 text-center">
+        <p className="text-[11px] text-white/20 leading-relaxed max-w-md mx-auto">
+          Avanor is in open beta on Solana Devnet — no real funds are involved at this stage.
+          Yield is variable and provided by the MarginFi protocol; Avanor charges a 10% performance
+          fee on yield earned, never on your principal.
+        </p>
+      </footer>
     </div>
   );
 }

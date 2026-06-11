@@ -13,6 +13,9 @@ const USDC_MINT: Record<string, string> = {
 
 const FALLBACK_APY = 8.4;
 const SECONDS_PER_YEAR = 365.25 * 24 * 3600;
+// Avanor's revenue model: a performance fee on yield earned (never principal).
+// The APY and earnings surfaced to users are always net of this fee.
+const PERFORMANCE_FEE = 0.10;
 
 async function getUserKeypair(dbUserId: string): Promise<Keypair> {
   const wallet = await prisma.wallet.findUnique({ where: { userId: dbUserId } });
@@ -43,12 +46,13 @@ export async function getCurrentApy(): Promise<number> {
       const client = await createMarginfiClient(dummy);
       const usdcMint = new PublicKey(USDC_MINT[NETWORK]);
       const bank = client.getBankByMint(usdcMint);
-      const apy = bank ? bank.computeInterestRates().lendingRate.toNumber() * 100 : FALLBACK_APY;
-      const value = apy > 0 ? apy : FALLBACK_APY;
+      const grossApy = bank ? bank.computeInterestRates().lendingRate.toNumber() * 100 : FALLBACK_APY;
+      const apy = (grossApy > 0 ? grossApy : FALLBACK_APY) * (1 - PERFORMANCE_FEE);
+      const value = apy;
       apyCache = { value, fetchedAt: Date.now() };
       return value;
     } catch {
-      const value = apyCache?.value ?? FALLBACK_APY;
+      const value = apyCache?.value ?? FALLBACK_APY * (1 - PERFORMANCE_FEE);
       apyCache = { value, fetchedAt: Date.now() };
       return value;
     } finally {

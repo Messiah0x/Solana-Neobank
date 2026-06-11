@@ -54,7 +54,10 @@ async function start() {
   try {
     const app = await build();
     const port = Number(process.env.PORT ?? 4000);
-    await app.listen({ port, host: '0.0.0.0' });
+    // '::' binds dual-stack (IPv6 + IPv4). Railway's public edge proxy reaches
+    // containers over IPv6 — binding only 0.0.0.0 makes public traffic 502
+    // even while IPv4 healthchecks pass.
+    await app.listen({ port, host: '::' });
   } catch (err) {
     server.log.error(err);
     process.exit(1);

@@ -291,6 +291,20 @@ export default function YieldPage() {
               </motion.div>
             )}
 
+            {/* Fee transparency */}
+            {hasWallet && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.45 }}
+                className="text-[11px] text-white/25 leading-relaxed mt-4 px-1"
+              >
+                How Avanor makes money: we take a 10% performance fee on yield you earn — never on
+                your principal. Deposits and withdrawals are always free. The APY shown is what you
+                receive after fees.
+              </motion.p>
+            )}
+
           </div>
         </main>
       </div>
