@@ -35,6 +35,21 @@ model YieldPosition {
   @@map("yield_positions")
 }
 
+// Ledger of confirmed yield transactions. The unique signature makes
+// deposit/withdraw confirmation idempotent — replaying the same on-chain
+// signature can never double-count a position change.
+model YieldTxn {
+  id        String   @id @default(cuid())
+  signature String   @unique
+  userId    String
+  kind      String // "deposit" | "withdraw"
+  amount    Float
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("yield_txns")
+}
+
 model Wallet {
   id           String   @id @default(cuid())
   userId       String   @unique

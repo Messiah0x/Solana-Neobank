@@ -173,7 +173,7 @@ export default function ActivityPage() {
   const privyAddress = wallets[0]?.address ?? null;
 
   const { data: wallet } = useSWR(
-    userId ? `wallet-${userId}` : null,
+    userId ? `wallet-${userId}-${privyAddress ?? 'pending'}` : null,
     async () => {
       try {
         return await getWallet(userId!);

@@ -215,6 +215,25 @@ async function assertTxConfirmed(signature: string) {
   throw new Error('Transaction not confirmed — try again');
 }
 
+// Records the signature in the YieldTxn ledger; the unique constraint makes
+// confirmation idempotent. Returns false if this signature was already
+// processed (replay or double-submit).
+async function recordYieldTxn(
+  tx: Pick<typeof prisma, 'yieldTxn'>,
+  dbUserId: string,
+  kind: 'deposit' | 'withdraw',
+  amount: number,
+  signature: string,
+): Promise<boolean> {
+  try {
+    await tx.yieldTxn.create({ data: { signature, userId: dbUserId, kind, amount } });
+    return true;
+  } catch (err) {
+    if ((err as { code?: string }).code === 'P2002') return false; // already processed
+    throw err;
+  }
+}
+
 export async function confirmDeposit(
   userId: string,
   amountUsdc: number,
@@ -225,19 +244,23 @@ export async function confirmDeposit(
   const dbUserId = await resolveDbUserId(userId);
   await assertTxConfirmed(signature);
 
-  await prisma.yieldPosition.upsert({
-    where: { userId: dbUserId },
-    create: {
-      userId: dbUserId,
-      depositAmount: amountUsdc,
-      depositedAt: new Date(),
-      protocol: 'marginfi',
-      marginfiAccountPk,
-    },
-    update: {
-      depositAmount: { increment: amountUsdc },
-      marginfiAccountPk,
-    },
+  await prisma.$transaction(async (tx) => {
+    const fresh = await recordYieldTxn(tx, dbUserId, 'deposit', amountUsdc, signature);
+    if (!fresh) return;
+    await tx.yieldPosition.upsert({
+      where: { userId: dbUserId },
+      create: {
+        userId: dbUserId,
+        depositAmount: amountUsdc,
+        depositedAt: new Date(),
+        protocol: 'marginfi',
+        marginfiAccountPk,
+      },
+      update: {
+        depositAmount: { increment: amountUsdc },
+        marginfiAccountPk,
+      },
+    });
   });
   return { signature };
 }
@@ -245,13 +268,17 @@ export async function confirmDeposit(
 export async function confirmWithdraw(userId: string, amountUsdc: number, signature: string) {
   if (amountUsdc <= 0) throw new Error('Amount must be positive');
   const dbUserId = await resolveDbUserId(userId);
-  const position = await prisma.yieldPosition.findUnique({ where: { userId: dbUserId } });
-  if (!position) throw Object.assign(new Error('No yield position found'), { code: 'NOT_FOUND' });
   await assertTxConfirmed(signature);
 
-  await prisma.yieldPosition.update({
-    where: { userId: dbUserId },
-    data: { depositAmount: Math.max(0, position.depositAmount - amountUsdc) },
+  await prisma.$transaction(async (tx) => {
+    const fresh = await recordYieldTxn(tx, dbUserId, 'withdraw', amountUsdc, signature);
+    if (!fresh) return;
+    const position = await tx.yieldPosition.findUnique({ where: { userId: dbUserId } });
+    if (!position) throw Object.assign(new Error('No yield position found'), { code: 'NOT_FOUND' });
+    await tx.yieldPosition.update({
+      where: { userId: dbUserId },
+      data: { depositAmount: Math.max(0, position.depositAmount - amountUsdc) },
+    });
   });
   return { signature };
 }

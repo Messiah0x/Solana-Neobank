@@ -170,7 +170,7 @@ export default function SettingsPage() {
   const privyAddress = wallets[0]?.address ?? null;
 
   const { data: wallet } = useSWR(
-    userId ? `wallet-${userId}` : null,
+    userId ? `wallet-${userId}-${privyAddress ?? 'pending'}` : null,
     async () => {
       try {
         return await getWallet(userId!);

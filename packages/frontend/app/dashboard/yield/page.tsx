@@ -47,7 +47,7 @@ export default function YieldPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const { data: wallet } = useSWR(
-    userId ? `wallet-${userId}` : null,
+    userId ? `wallet-${userId}-${privyAddress ?? 'pending'}` : null,
     async () => {
       try {
         return await getWallet(userId!);
