@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import walletRoutes from './routes/wallet';
 import yieldRoutes from './routes/yield';
 import healthRoutes from './routes/health';
@@ -28,6 +29,14 @@ async function build() {
     exposedHeaders: ['Content-Type'],
     preflight: true,
     strictPreflight: false,
+  });
+
+  // Public, unauthenticated API — basic per-IP rate limiting to keep abuse
+  // (and our RPC bill) in check. Health checks are exempt.
+  await server.register(rateLimit, {
+    max: 120,
+    timeWindow: '1 minute',
+    allowList: (req) => req.url === '/api/health',
   });
 
   await server.register(walletRoutes, { prefix: '/api/wallet' });
