@@ -146,7 +146,7 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
                   border: `1px solid ${result === 'heads' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
                 }}
               >
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 mb-1">
                   Final charge
                 </p>
                 <p className={`text-2xl font-bold font-mono ${result === 'heads' ? 'text-green-400' : 'text-red-400'}`}>

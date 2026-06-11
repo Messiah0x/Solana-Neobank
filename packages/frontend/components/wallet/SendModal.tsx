@@ -168,7 +168,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-sm rounded-3xl p-6 max-h-[90dvh] overflow-y-auto theme-invert"
           style={{
-            background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)',
+            background: 'var(--gradient-modal-dark)',
             border: '1px solid rgba(212,175,127,0.12)',
             boxShadow: '0 32px 64px rgba(0,0,0,0.7)',
           }}
@@ -218,7 +218,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
                     border: '1px solid rgba(255,255,255,0.07)',
                   }}
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2">
                     Transaction
                   </p>
                   <p className="font-mono text-xs text-white/50 break-all">{txSig}</p>
@@ -278,7 +278,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
                     border: '1px solid rgba(255,255,255,0.07)',
                   }}
                 >
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-white/25">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25">
                     Available
                   </span>
                   <span className="text-sm font-semibold text-white/60">
@@ -288,7 +288,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
 
                 {/* Recipient input */}
                 <div className="mb-3">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-1.5 block">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-1.5 block">
                     Recipient Address
                   </label>
                   <input
@@ -310,7 +310,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
 
                 {/* Amount input */}
                 <div className="mb-5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-1.5 block">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-1.5 block">
                     Amount (USDC)
                   </label>
                   <div className="relative">

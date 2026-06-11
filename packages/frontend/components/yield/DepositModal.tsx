@@ -72,7 +72,7 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.08] rounded-t-3xl p-6 pb-8 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto theme-invert"
-            style={{ background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)' }}
+            style={{ background: 'var(--gradient-modal-dark)' }}
           >
             {/* Handle bar */}
             <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-5" />
@@ -86,7 +86,7 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
               </div>
               <div>
                 <h2 className="font-heading font-bold text-lg">Start Earning</h2>
-                <p className="text-white/40 text-xs">Deposit into Marginfi lending pool</p>
+                <p className="text-white/40 text-xs">Deposit into MarginFi lending pool</p>
               </div>
             </div>
 
@@ -137,7 +137,7 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
 
             {/* APY badge */}
             <div className="flex items-center justify-between rounded-xl bg-accent-muted border border-accent/15 px-4 py-2.5 mb-3">
-              <span className="text-sm text-white/60">APY via Marginfi</span>
+              <span className="text-sm text-white/60">APY via MarginFi</span>
               <span className="font-mono font-bold text-accent text-lg">{apy.toFixed(1)}%</span>
             </div>
 

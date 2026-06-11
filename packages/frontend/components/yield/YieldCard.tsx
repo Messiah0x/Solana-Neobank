@@ -101,7 +101,7 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
                 <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                <span className="text-sm font-semibold text-white/70">Earning on Marginfi</span>
+                <span className="text-sm font-semibold text-white/70">Earning on MarginFi</span>
               </div>
               <div className="px-2.5 py-1 rounded-full bg-accent-muted border border-accent/15 text-accent font-mono text-xs font-bold">
                 {apy.toFixed(1)}% APY
@@ -112,18 +112,18 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
             <div className="grid grid-cols-2 gap-6">
               {/* Deposited */}
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/25 mb-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2">
                   Deposited
                 </p>
                 <div className="font-mono font-bold text-2xl">
                   ${depositedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <p className="text-xs text-white/30 mt-1">USDC · Marginfi</p>
+                <p className="text-xs text-white/30 mt-1">USDC · MarginFi</p>
               </div>
 
               {/* Live ticker */}
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/25 mb-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2">
                   Earned
                 </p>
                 <YieldTicker
@@ -181,7 +181,7 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
         {/* APY headline */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-white/25 mb-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2">
               Current APY
             </p>
             <motion.div
@@ -192,12 +192,12 @@ export function YieldCard({ yieldData, isLoading, usdcBalance, userId, onDeposit
               {apy.toFixed(1)}
               <span className="text-2xl text-accent/60 ml-1">%</span>
             </motion.div>
-            <p className="text-xs text-white/30 mt-2">Lending rate on Marginfi · USDC</p>
+            <p className="text-xs text-white/30 mt-2">Lending rate on MarginFi · USDC</p>
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
             <div className="px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-              <span className="text-xs text-white/35 font-semibold">Marginfi</span>
+              <span className="text-xs text-white/35 font-semibold">MarginFi</span>
             </div>
             <div className="px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
               <span className="text-xs text-white/35 font-semibold">Non-custodial</span>

@@ -37,7 +37,7 @@ const stepTransition = {
   ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
 };
 
-export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
+export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -354,7 +354,7 @@ export function OnboardingModal({ publicKey, apy = 8.4, onComplete }: Props) {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-white/80">10 USDC</p>
-                          <p className="text-xs text-white/30">For yield &amp; transfers</p>
+                          <p className="text-xs text-white/30">For yield & transfers</p>
                         </div>
                       </div>
 

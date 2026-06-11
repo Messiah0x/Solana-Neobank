@@ -161,7 +161,7 @@ export default function PortfolioPage() {
                 style={{ background: 'radial-gradient(circle, rgba(212,175,127,0.12) 0%, transparent 65%)', transform: 'translate(25%, -25%)' }}
               />
               <div className="relative">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40 mb-2">
                   Total across {trackedWallets.length} wallet{trackedWallets.length === 1 ? '' : 's'}
                 </p>
                 <p className="text-4xl font-bold font-mono text-white tabular-nums">
@@ -178,7 +178,7 @@ export default function PortfolioPage() {
 
             {/* Tracked wallets */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.3 }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/25 mb-2 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2 px-1">
                 Tracked wallets
               </p>
               <div className="rounded-2xl border border-white/[0.06] bg-surface/30 overflow-hidden">
@@ -247,7 +247,7 @@ export default function PortfolioPage() {
 
             {/* Add a wallet */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.3 }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/25 mb-2 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2 px-1">
                 Add a wallet
               </p>
               <div className="rounded-2xl border border-white/[0.06] bg-surface/30 p-4">

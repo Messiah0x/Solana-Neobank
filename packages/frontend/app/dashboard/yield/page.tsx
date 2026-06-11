@@ -30,7 +30,7 @@ function ProjectionCard({ label, value, delay }: { label: string; value: number;
       transition={{ delay, duration: 0.3 }}
       className="flex-1 rounded-2xl border border-white/[0.06] bg-surface/40 p-4"
     >
-      <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2">{label}</p>
       <p className="font-mono text-lg font-bold text-success">+${fmt(value)}</p>
     </motion.div>
   );
@@ -124,7 +124,7 @@ export default function YieldPage() {
               />
               <div className="relative flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/30 mb-2">Live Rate</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-2">Live Rate</p>
                   {isLoading ? (
                     <div className="w-20 h-10 bg-white/[0.06] rounded-xl animate-pulse" />
                   ) : (
@@ -194,7 +194,7 @@ export default function YieldPage() {
                   className="rounded-2xl border border-white/[0.06] bg-surface/30 p-5"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-white/30">Position</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30">Position</p>
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/15">
                       <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                       <span className="text-[10px] font-bold text-success">Earning</span>
@@ -204,12 +204,12 @@ export default function YieldPage() {
                   <p className="text-sm text-white/30 mt-1 mb-5">USDC deposited · MarginFi</p>
                   <div className="flex items-center gap-3 pt-4 border-t border-white/[0.05]">
                     <div>
-                      <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold">Total Earned</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25">Total Earned</p>
                       <p className="font-mono text-base font-bold text-success mt-0.5">+${fmt(earned)}</p>
                     </div>
                     <div className="w-px h-8 bg-white/[0.06]" />
                     <div>
-                      <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold">Since</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25">Since</p>
                       <p className="text-sm font-semibold text-white/40 mt-0.5">
                         {yieldData?.depositedAt
                           ? new Date(yieldData.depositedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -291,7 +291,7 @@ export default function YieldPage() {
                 transition={{ delay: 0.4 }}
                 className="rounded-2xl border border-white/[0.05] bg-white/[0.015] p-4"
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/20 mb-3">Protocol</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/20 mb-3">Protocol</p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.06] flex items-center justify-center">

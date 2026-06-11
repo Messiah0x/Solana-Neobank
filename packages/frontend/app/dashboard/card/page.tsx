@@ -553,7 +553,7 @@ export default function CardPage() {
                 },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-surface/40 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-white/25 mb-2">{s.label}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-2">{s.label}</p>
                   <p className="font-mono text-xl font-bold text-white/70">{s.value}</p>
                   <p className="text-[11px] text-white/25 mt-1">{s.sub}</p>
                 </div>

@@ -19,6 +19,10 @@
     --color-muted: 34 34 34;
     --color-fg: 255 255 255;
     --color-ivory: 247 245 240;
+
+    /* Shared dark gradient for bottom-sheet/modal surfaces (always dark,
+       paired with .theme-invert so text stays readable in light mode). */
+    --gradient-modal-dark: linear-gradient(145deg, #161310 0%, #0F0D0A 100%);
   }
 
   :root.light {

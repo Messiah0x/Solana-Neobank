@@ -297,7 +297,7 @@ export default function ActivityPage() {
                     </svg>
                   </div>
                   <p className="text-sm font-semibold text-white/35">No yield transactions yet</p>
-                  <p className="text-xs text-white/20 mt-1.5">Deposit to Marginfi to start earning</p>
+                  <p className="text-xs text-white/20 mt-1.5">Deposit to MarginFi to start earning</p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center py-16 px-6 text-center">
@@ -319,7 +319,7 @@ export default function ActivityPage() {
                     {Object.entries(grouped).map(([date, txs]) => (
                       <div key={date}>
                         <div className="px-4 pt-4 pb-1">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/20">{date}</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/20">{date}</p>
                         </div>
                         <div className="px-4">
                           {txs.map((tx: Transaction, i: number) => (

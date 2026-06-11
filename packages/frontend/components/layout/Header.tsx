@@ -32,6 +32,7 @@ export function Header() {
           onClick={handleSignOut}
           className="w-8 h-8 rounded-full bg-accent-muted border border-accent-border flex items-center justify-center hover:bg-accent/20 transition-colors"
           title="Sign out"
+          aria-label="Sign out"
         >
           <span className="font-heading text-accent text-xs font-bold">{initials}</span>
         </button>

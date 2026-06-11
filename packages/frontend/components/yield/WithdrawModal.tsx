@@ -70,7 +70,7 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.08] rounded-t-3xl p-8 pb-12 max-w-lg mx-auto max-h-[92dvh] overflow-y-auto theme-invert"
-            style={{ background: 'linear-gradient(145deg, #161310 0%, #0F0D0A 100%)' }}
+            style={{ background: 'var(--gradient-modal-dark)' }}
           >
             {/* Handle bar */}
             <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-8" />
@@ -84,7 +84,7 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
               </div>
               <div>
                 <h2 className="font-heading font-bold text-lg">Withdraw Funds</h2>
-                <p className="text-white/40 text-xs">Withdraw USDC from Marginfi lending pool</p>
+                <p className="text-white/40 text-xs">Withdraw USDC from MarginFi lending pool</p>
               </div>
             </div>
 
