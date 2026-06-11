@@ -23,6 +23,7 @@ import {
   getWalletBalance,
   getWalletTransactions,
   getYieldData,
+  getYieldApy,
 } from '@/lib/api';
 import { fetchBalancesFromChain, fetchTransactionsFromChain } from '@/lib/chain';
 
@@ -126,6 +127,9 @@ export default function DashboardPage() {
     () => getYieldData(userId!),
     { refreshInterval: 60_000 },
   );
+
+  const { data: liveApy } = useSWR('yield-apy', getYieldApy, { refreshInterval: 60_000 });
+  const apy = yieldData?.apy ?? liveApy ?? 5.2;
 
   const { data: transactions, isLoading: txLoading, mutate: mutateTransactions } = useSWR(
     walletPublicKey && userId ? `tx-${userId}` : null,
@@ -265,7 +269,7 @@ export default function DashboardPage() {
               <BalanceHero
                 usdc={balance?.usdc ?? 0}
                 sol={balance?.sol ?? 0}
-                apy={yieldData?.apy ?? 8.4}
+                apy={apy}
                 hasYield={yieldData?.hasPosition ?? false}
                 isLoading={balanceLoading}
                 publicKey={walletPublicKey ?? ''}
@@ -348,7 +352,7 @@ export default function DashboardPage() {
         <OnboardingModal
           publicKey={walletPublicKey}
           userId={userId}
-          apy={yieldData?.apy ?? 8.4}
+          apy={apy}
           onComplete={() => setShowOnboarding(false)}
         />
       )}
