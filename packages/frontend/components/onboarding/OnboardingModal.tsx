@@ -134,7 +134,7 @@ export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[92dvh] overflow-y-auto theme-invert"
         style={{
-          background: 'linear-gradient(145deg, #1A1510 0%, #0F0D0A 50%, #0A0A0A 100%)',
+          background: 'var(--gradient-hero-dark)',
           border: '1px solid rgba(212,175,127,0.15)',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -228,7 +228,7 @@ export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
                   <button
                     onClick={goNext}
                     className="w-full py-3.5 rounded-2xl font-semibold text-sm text-[#0A0A0A] transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
+                    style={{ background: 'var(--gradient-gold)' }}
                   >
                     Get Started
                   </button>
@@ -421,7 +421,7 @@ export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
                   <button
                     onClick={goNext}
                     className="w-full py-3.5 rounded-2xl font-semibold text-sm text-[#0A0A0A] transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
+                    style={{ background: 'var(--gradient-gold)' }}
                   >
                     Next
                   </button>
@@ -481,7 +481,7 @@ export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
                   <button
                     onClick={goToYield}
                     className="w-full py-3.5 rounded-2xl font-semibold text-sm text-[#0A0A0A] transition-all hover:opacity-90 active:scale-[0.98] mb-3"
-                    style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
+                    style={{ background: 'var(--gradient-gold)' }}
                   >
                     Go to Yield
                   </button>

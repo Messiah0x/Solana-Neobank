@@ -207,7 +207,7 @@ export default function CardPage() {
               style={{
                 background: frozen
                   ? 'linear-gradient(145deg, #181818 0%, #111111 40%, #0A0A0A 100%)'
-                  : 'linear-gradient(145deg, #1C1610 0%, #130F0A 40%, #0A0A0A 100%)',
+                  : 'var(--gradient-card-dark)',
                 border: frozen
                   ? '1px solid rgba(255,255,255,0.08)'
                   : '1px solid rgba(212,175,127,0.18)',

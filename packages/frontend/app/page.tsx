@@ -56,7 +56,7 @@ export default function HomePage() {
               <br />
               <span
                 className="bg-clip-text text-transparent"
-                style={{ backgroundImage: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
+                style={{ backgroundImage: 'var(--gradient-gold)' }}
               >
                 always earning.
               </span>
@@ -73,7 +73,7 @@ export default function HomePage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="px-8 py-3.5 font-semibold rounded-xl transition-colors text-sm text-[#0A0A0A]"
-                  style={{ background: 'linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%)' }}
+                  style={{ background: 'var(--gradient-gold)' }}
                 >
                   Get Started
                 </motion.button>

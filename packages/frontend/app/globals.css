@@ -23,6 +23,14 @@
     /* Shared dark gradient for bottom-sheet/modal surfaces (always dark,
        paired with .theme-invert so text stays readable in light mode). */
     --gradient-modal-dark: linear-gradient(145deg, #161310 0%, #0F0D0A 100%);
+
+    /* Shared dark hero gradients for large feature panels (always dark,
+       paired with .theme-invert so text stays readable in light mode). */
+    --gradient-hero-dark: linear-gradient(135deg, #1A1510 0%, #0F0D0A 50%, #0A0A0A 100%);
+    --gradient-card-dark: linear-gradient(145deg, #1C1610 0%, #130F0A 40%, #0A0A0A 100%);
+
+    /* Shared gold accent gradient for icons/badges/CTAs. */
+    --gradient-gold: linear-gradient(135deg, #D4AF7F 0%, #B18C5A 100%);
   }
 
   :root.light {

@@ -240,7 +240,7 @@ export default function SettingsPage() {
                     style={{
                       background: 'linear-gradient(135deg, rgba(212,175,127,0.15) 0%, rgba(212,175,127,0.05) 100%)',
                       border: '1px solid rgba(212,175,127,0.2)',
-                      color: '#D4AF7F',
+                      color: 'var(--accent)',
                     }}
                   >
                     {image ? (
