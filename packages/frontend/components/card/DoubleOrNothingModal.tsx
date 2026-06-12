@@ -2,16 +2,18 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { PlayCurrency } from '@/lib/hooks/usePlayBalance';
 
-interface CoinFlipModalProps {
+interface DoubleOrNothingModalProps {
   amount: number;
+  currency: PlayCurrency;
   onClose: () => void;
-  onResolved: (result: 'heads' | 'tails', finalAmount: number) => void;
+  onResolved: (result: 'win' | 'lose') => void;
 }
 
 const SPIN_DURATION = 2.4;
 
-function CoinFace({ side }: { side: 'heads' | 'tails' }) {
+function CoinFace({ side }: { side: 'win' | 'lose' }) {
   return (
     <div
       className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1"
@@ -20,35 +22,34 @@ function CoinFace({ side }: { side: 'heads' | 'tails' }) {
         border: '4px solid rgba(212,175,127,0.9)',
         boxShadow: 'inset 0 0 24px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.5)',
         backfaceVisibility: 'hidden',
-        transform: side === 'tails' ? 'rotateY(180deg)' : undefined,
+        transform: side === 'lose' ? 'rotateY(180deg)' : undefined,
       }}
     >
-      {side === 'heads' ? (
+      {side === 'win' ? (
         <>
-          <svg width={40} height={52} viewBox="0 0 75 100" fill="none">
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M37.5 2 L0 98 L14 98 L37.5 22 L61 98 L75 98 L37.5 2 Z M37.5 62 L28 98 L47 98 Z"
-              fill="#1A1410"
-            />
-          </svg>
-          <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A1410]">FREE</span>
+          <span className="text-3xl font-black text-[#1A1410]">2x</span>
+          <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A1410]">WIN</span>
         </>
       ) : (
         <>
-          <span className="text-3xl font-black text-[#1A1410]">2x</span>
-          <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A1410]">DOUBLE</span>
+          <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#1A1410" strokeWidth={3}>
+            <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+          </svg>
+          <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A1410]">LOSE</span>
         </>
       )}
     </div>
   );
 }
 
-export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProps) {
+export function DoubleOrNothingModal({ amount, currency, onClose, onResolved }: DoubleOrNothingModalProps) {
   const [phase, setPhase] = useState<'idle' | 'flipping' | 'result'>('idle');
-  const [result, setResult] = useState<'heads' | 'tails' | null>(null);
+  const [result, setResult] = useState<'win' | 'lose' | null>(null);
   const [rotation, setRotation] = useState(0);
+
+  const symbol = currency === 'usdc' ? '$' : '';
+  const suffix = currency === 'usdc' ? '' : ' SOL';
+  const fmt = (n: number) => `${symbol}${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}${suffix}`;
 
   function flipCoin(): boolean {
     if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
@@ -61,11 +62,11 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
 
   function flip() {
     if (phase !== 'idle') return;
-    const isHeads = flipCoin();
-    const outcome: 'heads' | 'tails' = isHeads ? 'heads' : 'tails';
-    // Land showing the correct face: heads = multiple of 360, tails = 180 + multiple of 360
+    const isWin = flipCoin();
+    const outcome: 'win' | 'lose' = isWin ? 'win' : 'lose';
+    // Land showing the correct face: win = multiple of 360, lose = 180 + multiple of 360
     const fullSpins = 5;
-    const target = fullSpins * 360 + (isHeads ? 0 : 180);
+    const target = fullSpins * 360 + (isWin ? 0 : 180);
     setRotation(target);
     setPhase('flipping');
     setTimeout(() => {
@@ -73,8 +74,6 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
       setPhase('result');
     }, SPIN_DURATION * 1000);
   }
-
-  const finalAmount = result === 'tails' ? amount * 2 : result === 'heads' ? 0 : amount;
 
   return (
     <AnimatePresence>
@@ -103,13 +102,13 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
             Double or Nothing
           </p>
           <h2 className="text-xl font-bold text-ivory mb-1">
-            ${amount.toFixed(2)} purchase
+            {fmt(amount)} bet
           </h2>
           <p className="text-xs text-white/35 mb-6 leading-relaxed">
-            {phase === 'idle' && 'Tap the coin to flip. Heads = free. Tails = pay double.'}
+            {phase === 'idle' && 'Tap the coin to flip. Win doubles your bet, lose forfeits it. Fair 50/50 odds.'}
             {phase === 'flipping' && 'Flipping...'}
-            {phase === 'result' && result === 'heads' && "Heads! This one's on the house."}
-            {phase === 'result' && result === 'tails' && 'Tails! Double charge applied.'}
+            {phase === 'result' && result === 'win' && `You won! +${fmt(amount)} added to your play balance.`}
+            {phase === 'result' && result === 'lose' && `Tough luck — -${fmt(amount)} from your play balance.`}
           </p>
 
           <div style={{ perspective: 800 }} className="mb-6">
@@ -127,8 +126,8 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
                 cursor: phase === 'idle' ? 'pointer' : 'default',
               }}
             >
-              <CoinFace side="heads" />
-              <CoinFace side="tails" />
+              <CoinFace side="win" />
+              <CoinFace side="lose" />
             </motion.button>
           </div>
 
@@ -142,19 +141,19 @@ export function CoinFlipModal({ amount, onClose, onResolved }: CoinFlipModalProp
               <div
                 className="rounded-2xl p-4 mb-4"
                 style={{
-                  background: result === 'heads' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                  border: `1px solid ${result === 'heads' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                  background: result === 'win' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                  border: `1px solid ${result === 'win' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
                 }}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 mb-1">
-                  Final charge
+                  Result
                 </p>
-                <p className={`text-2xl font-bold font-mono ${result === 'heads' ? 'text-green-400' : 'text-red-400'}`}>
-                  ${finalAmount.toFixed(2)}
+                <p className={`text-2xl font-bold font-mono ${result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                  {result === 'win' ? '+' : '-'}{fmt(amount)}
                 </p>
               </div>
               <button
-                onClick={() => onResolved(result, finalAmount)}
+                onClick={() => onResolved(result)}
                 className="w-full py-3 rounded-xl font-semibold text-sm bg-accent text-[#0A0A0A] hover:opacity-90 transition-opacity"
               >
                 Done
