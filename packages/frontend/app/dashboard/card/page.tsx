@@ -87,7 +87,22 @@ export default function CardPage() {
 
   const [currency, setCurrency] = useState<FlipCurrency>('USDC');
   const [betAmount, setBetAmount] = useState(BET_PRESETS.USDC[1]);
-  const [pendingFlip, setPendingFlip] = useState<{ currency: FlipCurrency; amount: number } | null>(null);
+  const [pendingFlip, setPendingFlip] = useState<{ currency: FlipCurrency; amount: number; preview?: boolean } | null>(null);
+
+  // Lets people preview the coin flip animation/UI without a live house
+  // wallet or a real wallet transfer — purely client-side, no funds move.
+  function mockFlip(amount: number, currency: FlipCurrency): Promise<FlipResult> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const result: 'win' | 'lose' = Math.random() < 0.5 ? 'win' : 'lose';
+        resolve({
+          result,
+          payout: result === 'win' ? amount * 2 : 0,
+          payoutSignature: null,
+        });
+      }, 900);
+    });
+  }
 
   const walletBalance = currency === 'USDC' ? balance?.usdc ?? 0 : balance?.sol ?? 0;
   const maxBet = house?.enabled ? house.maxBet?.[currency] ?? 0 : 0;
@@ -103,7 +118,9 @@ export default function CardPage() {
   }
 
   function handleSettled(_result: FlipResult) {
+    const wasPreview = pendingFlip?.preview;
     setPendingFlip(null);
+    if (wasPreview) return;
     mutateBalance();
     mutateHistory();
   }
@@ -301,6 +318,15 @@ export default function CardPage() {
                   ? `Max bet is ${fmtAmount(maxBet, currency)} right now`
                   : `Flip for ${fmtAmount(betAmount, currency)}`}
               </button>
+
+              {!gameLive && (
+                <button
+                  onClick={() => setPendingFlip({ currency, amount: betAmount || presets[1], preview: true })}
+                  className="w-full mt-2 py-2.5 rounded-xl text-xs font-semibold text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20 transition-colors"
+                >
+                  Preview the coin flip (no funds, demo only)
+                </button>
+              )}
             </motion.div>
 
             {/* Flip stats */}
@@ -420,7 +446,11 @@ export default function CardPage() {
           <DoubleOrNothingModal
             amount={pendingFlip.amount}
             currency={pendingFlip.currency}
-            executeFlip={() => flip(pendingFlip.currency, pendingFlip.amount)}
+            executeFlip={() =>
+              pendingFlip.preview
+                ? mockFlip(pendingFlip.amount, pendingFlip.currency)
+                : flip(pendingFlip.currency, pendingFlip.amount)
+            }
             onClose={() => setPendingFlip(null)}
             onSettled={handleSettled}
           />
