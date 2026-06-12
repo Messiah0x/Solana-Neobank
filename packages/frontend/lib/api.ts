@@ -15,6 +15,29 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Privy's getAccessToken is hook-bound, so the provider registers it here
+// once on mount (see AuthTokenBridge) and the interceptor attaches a fresh
+// token to every request. Privy refreshes the token internally when stale.
+type TokenGetter = () => Promise<string | null>;
+let getAuthToken: TokenGetter | null = null;
+
+export function setAuthTokenGetter(getter: TokenGetter | null) {
+  getAuthToken = getter;
+}
+
+api.interceptors.request.use(async (config) => {
+  if (getAuthToken) {
+    try {
+      const token = await getAuthToken();
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    } catch {
+      // Token fetch failed (e.g. logged out) — send without and let the
+      // backend respond 401.
+    }
+  }
+  return config;
+});
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {

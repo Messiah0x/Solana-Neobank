@@ -1,10 +1,12 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import walletRoutes from './routes/wallet';
 import yieldRoutes from './routes/yield';
 import healthRoutes from './routes/health';
+import { authenticate, logAuthMode } from './lib/auth';
 
 const server = Fastify({
   logger: {
@@ -21,8 +23,21 @@ async function build() {
     .split(',')
     .map((o) => o.trim());
 
+  await server.register(helmet, {
+    // Pure JSON API — a restrictive CSP costs nothing and hardens any
+    // accidental HTML responses (error pages etc.).
+    contentSecurityPolicy: { directives: { defaultSrc: ["'none'"] } },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  });
+
   await server.register(cors, {
-    origin: true, // reflect request origin — allows all origins while keeping credentials
+    // Browser requests are restricted to known frontends. Server-to-server
+    // traffic (the Next.js rewrite proxy) carries no Origin header and is
+    // unaffected by CORS.
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(null, false);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -31,13 +46,19 @@ async function build() {
     strictPreflight: false,
   });
 
-  // Public, unauthenticated API — basic per-IP rate limiting to keep abuse
-  // (and our RPC bill) in check. Health checks are exempt.
+  // Basic per-IP rate limiting to keep abuse (and our RPC bill) in check.
+  // Health checks are exempt.
   await server.register(rateLimit, {
     max: 120,
     timeWindow: '1 minute',
     allowList: (req) => req.url === '/api/health',
   });
+
+  // Privy access-token verification. Routes marked `config: { public: true }`
+  // (health, APY) are exempt; everything else requires a verified identity
+  // when PRIVY_APP_ID/PRIVY_APP_SECRET are configured.
+  logAuthMode(server.log);
+  server.addHook('preHandler', authenticate);
 
   await server.register(walletRoutes, { prefix: '/api/wallet' });
   await server.register(yieldRoutes, { prefix: '/api/yield' });

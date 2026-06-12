@@ -1,6 +1,21 @@
 'use client';
 
-import { PrivyProvider } from '@privy-io/react-auth';
+import { useEffect } from 'react';
+import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import { setAuthTokenGetter } from '@/lib/api';
+
+// Bridges Privy's hook-bound getAccessToken into the axios client so every
+// backend request carries a verifiable Authorization header.
+function AuthTokenBridge({ children }: { children: React.ReactNode }) {
+  const { getAccessToken } = usePrivy();
+
+  useEffect(() => {
+    setAuthTokenGetter(getAccessToken);
+    return () => setAuthTokenGetter(null);
+  }, [getAccessToken]);
+
+  return <>{children}</>;
+}
 
 export function PrivyAuthProvider({ children }: { children: React.ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
@@ -28,7 +43,7 @@ export function PrivyAuthProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      {children}
+      <AuthTokenBridge>{children}</AuthTokenBridge>
     </PrivyProvider>
   );
 }
