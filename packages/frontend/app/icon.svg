@@ -1,11 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="22" fill="#0A0A0A"/>
   <defs>
-    <linearGradient id="g" x1="50" y1="14" x2="50" y2="90" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#D4AF7F"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#11151D"/>
+      <stop offset="100%" stop-color="#05070A"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F4E4C1"/>
+      <stop offset="50%" stop-color="#D4AF7F"/>
       <stop offset="100%" stop-color="#8B6914"/>
     </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="100" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D4AF7F"/>
+      <stop offset="100%" stop-color="#FFF6E0"/>
+    </linearGradient>
   </defs>
-  <path fill-rule="evenodd" clip-rule="evenodd" fill="url(#g)"
-    d="M50 14 L21.5 88 L32 88 L50 29.5 L68 88 L78.5 88 L50 14 Z M50 60.5 L42.7 88 L57.3 88 Z"/>
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+  <!-- Pillar "A" -->
+  <path fill="url(#gold)"
+    d="M50 11 L21 89 L32 89 L41 65 L59 65 L68 89 L79 89 Z M44.5 55 L50 39.5 L55.5 55 Z"/>
+  <!-- Ascending arrow through the crossbar, signalling growth / future -->
+  <path fill="url(#arrow)"
+    d="M37 70 L52 70 L52 58 L60 58 L46 42 L32 58 L40 58 Z"
+    transform="rotate(45 46 58)"/>
 </svg>

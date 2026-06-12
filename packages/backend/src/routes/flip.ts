@@ -74,7 +74,7 @@ export default async function flipRoutes(fastify: FastifyInstance) {
   });
 
   // GET /api/flip/history/:userId
-  fastify.get('/history/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/history/:userId', flipRateLimit, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const params = req.params as { userId: string };
       const userId = requestUserId(req, params.userId);

@@ -294,6 +294,18 @@ export async function resolveBet(
     return { result, payout: 0, payoutSignature: null };
   }
 
+  // The house balance can shift between prepare and resolve as other bets
+  // settle — re-check immediately before paying out so an insolvent house
+  // is flagged via payoutError rather than failing the transfer mid-flight.
+  const houseBalance = await getHouseBalance(currency, house.publicKey);
+  if (houseBalance < amount * 2) {
+    await prisma.coinFlip.update({
+      where: { id: flip.id },
+      data: { payoutError: 'House balance insufficient for payout at resolve time' },
+    });
+    throw err('You won, but the payout failed to send — contact support with your bet signature', 'PAYOUT_FAILED');
+  }
+
   try {
     const payoutSignature = await payOut(userPk, currency, amount);
     await prisma.coinFlip.update({ where: { id: flip.id }, data: { payoutSignature } });
