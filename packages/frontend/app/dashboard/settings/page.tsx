@@ -375,6 +375,31 @@ export default function SettingsPage() {
               <ReserveCard />
             </motion.div>
 
+            {/* Legal */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24, duration: 0.3 }}>
+              <SectionLabel>Legal</SectionLabel>
+              <div className="rounded-2xl border border-white/[0.06] bg-surface/30 overflow-hidden">
+                <a
+                  href="/legal/terms"
+                  className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="text-sm font-semibold text-white/70">Terms of Service</span>
+                  <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </a>
+                <a
+                  href="/legal/privacy"
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="text-sm font-semibold text-white/70">Privacy Policy</span>
+                  <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </a>
+              </div>
+            </motion.div>
+
             {/* Sign out */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26, duration: 0.3 }}>
               <button
