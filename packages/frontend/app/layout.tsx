@@ -37,7 +37,7 @@ export const viewport: Viewport = {
   themeColor: '#0A0A0A',
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://avanor.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://solana-neobank-beta.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
