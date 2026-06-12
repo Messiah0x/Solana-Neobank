@@ -1,8 +1,9 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useToast } from '@/lib/useToast';
+import { BottomSheetModal } from '@/components/ui/BottomSheetModal';
 
 interface Props {
   isOpen: boolean;
@@ -50,31 +51,13 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
-            onClick={handleClose}
-          />
-
-          {/* Sheet */}
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-            className="fixed bottom-0 left-0 right-0 z-[60] border-t border-white/[0.08] rounded-t-3xl p-8 pb-12 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto theme-invert"
-            style={{ background: 'var(--gradient-modal-dark)', paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}
-          >
-            {/* Handle bar */}
-            <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-8" />
-
+    <BottomSheetModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      contentClassName="p-8 pb-12"
+      handleClassName="mb-8"
+      safeAreaBottom="3rem"
+    >
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center flex-shrink-0">
@@ -175,9 +158,6 @@ export function WithdrawModal({ isOpen, onClose, onConfirm, depositedAmount }: P
                 )}
               </motion.button>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    </BottomSheetModal>
   );
 }
