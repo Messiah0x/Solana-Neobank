@@ -14,61 +14,62 @@ interface DoubleOrNothingModalProps {
 
 const LANDING_DURATION = 1.4;
 
-function CoinFace({ side }: { side: 'win' | 'lose' }) {
+function CoinDisc() {
   return (
     <div
-      className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1.5 overflow-hidden"
+      className="absolute inset-0 rounded-full overflow-hidden"
       style={{
         background:
-          'radial-gradient(circle at 32% 28%, #FFF6E0 0%, #F4E4C1 22%, #D4AF7F 55%, #B8893F 80%, #8B6914 100%)',
-        border: '3px solid rgba(255,237,200,0.95)',
+          'radial-gradient(circle at 32% 26%, #FFFCF2 0%, #FFF6E0 14%, #F4E4C1 34%, #D4AF7F 62%, #B8893F 86%, #8B6914 100%)',
         boxShadow:
-          'inset 0 3px 10px rgba(255,255,255,0.55), inset 0 -10px 22px rgba(0,0,0,0.35), 0 10px 30px rgba(0,0,0,0.55)',
+          'inset 0 6px 16px rgba(255,255,255,0.65), inset 0 -16px 30px rgba(0,0,0,0.45), inset 0 0 0 7px rgba(139,105,20,0.22)',
         backfaceVisibility: 'hidden',
-        transform: side === 'lose' ? 'rotateX(180deg)' : undefined,
       }}
     >
-      {/* Embossed ring + spec highlight for a 3D coin feel */}
+      {/* Reeded edge — fine radial ridges around the rim */}
+      <div
+        className="absolute inset-0 rounded-full pointer-events-none"
+        style={{
+          background: 'repeating-conic-gradient(rgba(91,67,10,0.16) 0deg 1.2deg, transparent 1.2deg 4.8deg)',
+          mixBlendMode: 'multiply',
+        }}
+      />
+      {/* Inner embossed ring */}
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
-          inset: 6,
+          inset: 10,
           border: '1.5px solid rgba(139,105,20,0.45)',
-          boxShadow: 'inset 0 1px 4px rgba(255,255,255,0.5)',
+          boxShadow: 'inset 0 1px 5px rgba(255,255,255,0.55), inset 0 -2px 6px rgba(0,0,0,0.18)',
         }}
       />
+      {/* Specular highlight */}
       <div
         className="absolute pointer-events-none"
         style={{
-          top: '8%',
-          left: '14%',
-          width: '38%',
-          height: '22%',
+          top: '6%',
+          left: '12%',
+          width: '46%',
+          height: '26%',
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.55)',
-          filter: 'blur(6px)',
+          background: 'rgba(255,255,255,0.65)',
+          filter: 'blur(8px)',
           transform: 'rotate(-25deg)',
         }}
       />
-      {side === 'win' ? (
-        <>
-          <span
-            className="text-4xl font-black tracking-tight"
-            style={{ color: '#3A2A0E', textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}
-          >
-            2x
-          </span>
-          <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">DOUBLE</span>
-        </>
-      ) : (
-        <>
-          <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#3A2A0E" strokeWidth={2.5}>
-            <circle cx="12" cy="12" r="9" />
-            <path strokeLinecap="round" d="M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 1.1-.7 1.7-1.6 2.3-.9.6-1.4 1.1-1.4 2.2M12 17h.01" />
-          </svg>
-          <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">NEXT TIME</span>
-        </>
-      )}
+      {/* Lower rim shadow for roundness */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '4%',
+          left: '18%',
+          width: '64%',
+          height: '20%',
+          borderRadius: '50%',
+          background: 'rgba(91,67,10,0.35)',
+          filter: 'blur(10px)',
+        }}
+      />
     </div>
   );
 }
@@ -105,10 +106,10 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
     try {
       const result = await executeFlip();
       setSpinFast(false);
-      // Land on the correct face: win shows the front (multiple of 360),
-      // lose shows the back (180 offset), with a couple of extra spins.
+      // Always land face-up (a multiple of 360) after a couple of extra
+      // spins — the win/lose outcome is shown via the overlay, not the face.
       const base = Math.ceil(rotationRef.current / 360) * 360;
-      const target = base + 3 * 360 + (result.result === 'lose' ? 180 : 0);
+      const target = base + 3 * 360;
       rotationRef.current = target;
       setRotation(target);
       setTimeout(() => {
@@ -166,16 +167,23 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
             {phase === 'error' && (error ?? 'Something went wrong')}
           </p>
 
-          <div style={{ perspective: 1000 }} className="mb-6 relative">
+          <div style={{ perspective: 1000 }} className="mb-6 relative h-44 flex items-center justify-center">
             {/* Soft ambient glow beneath the coin for depth */}
             <div
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
               style={{
-                width: 170,
-                height: 170,
+                width: 190,
+                height: 190,
                 background: 'radial-gradient(circle, rgba(212,175,127,0.35) 0%, rgba(212,175,127,0) 70%)',
                 filter: 'blur(4px)',
               }}
+            />
+            {/* Cast shadow that contracts while the coin is airborne */}
+            <motion.div
+              className="absolute left-1/2 bottom-1 -translate-x-1/2 rounded-full pointer-events-none"
+              style={{ width: 110, height: 16, background: 'radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 75%)' }}
+              animate={{ scaleX: spinFast ? [1, 0.55, 1] : 1, opacity: spinFast ? [0.6, 0.3, 0.6] : 0.6 }}
+              transition={spinFast ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
             />
             <motion.button
               type="button"
@@ -183,7 +191,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
               disabled={phase !== 'idle'}
               animate={{
                 rotateX: rotation,
-                y: spinFast ? [0, -14, 0] : 0,
+                y: spinFast ? [0, -22, 0] : 0,
               }}
               transition={
                 spinFast
@@ -199,19 +207,44 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
               style={{
                 transformStyle: 'preserve-3d',
                 cursor: phase === 'idle' ? 'pointer' : 'default',
+                boxShadow: '0 18px 40px rgba(0,0,0,0.5)',
               }}
             >
-              <CoinFace side="win" />
-              <CoinFace side="lose" />
-              {/* Coin edge for thickness illusion */}
+              {/* Coin edge — gives the disc visible thickness as it tilts */}
               <div
                 className="absolute inset-0 rounded-full pointer-events-none"
                 style={{
-                  transform: 'translateZ(-1px) scale(1.015)',
-                  background: 'linear-gradient(180deg, #8B6914 0%, #5C4410 100%)',
-                  zIndex: -1,
+                  transform: 'translateZ(-6px) scale(0.985)',
+                  background: 'linear-gradient(180deg, #C99B5A 0%, #8B6914 45%, #5C4410 100%)',
                 }}
               />
+              <CoinDisc />
+              {/* Result overlay — fades in once the coin has landed */}
+              <AnimatePresence>
+                {phase === 'result' && outcome && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-1.5"
+                  >
+                    {outcome.result === 'win' ? (
+                      <>
+                        <span className="text-4xl font-black tracking-tight" style={{ color: '#3A2A0E', textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>2x</span>
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">DOUBLE</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#3A2A0E" strokeWidth={2.5}>
+                          <circle cx="12" cy="12" r="9" />
+                          <path strokeLinecap="round" d="M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 1.1-.7 1.7-1.6 2.3-.9.6-1.4 1.1-1.4 2.2M12 17h.01" />
+                        </svg>
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">NEXT TIME</span>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.button>
           </div>
 
