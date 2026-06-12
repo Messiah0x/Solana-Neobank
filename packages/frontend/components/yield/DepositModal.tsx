@@ -61,7 +61,7 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
             onClick={() => !confirming && onClose()}
           />
 
@@ -71,8 +71,8 @@ export function DepositModal({ isOpen, onClose, onConfirm, usdcBalance, apy }: P
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-            className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.08] rounded-t-3xl p-6 pb-8 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto theme-invert"
-            style={{ background: 'var(--gradient-modal-dark)' }}
+            className="fixed bottom-0 left-0 right-0 z-[60] border-t border-white/[0.08] rounded-t-3xl p-6 pb-8 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto theme-invert"
+            style={{ background: 'var(--gradient-modal-dark)', paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
           >
             {/* Handle bar */}
             <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-5" />
