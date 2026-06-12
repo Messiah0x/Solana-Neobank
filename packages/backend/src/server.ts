@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import * as Sentry from '@sentry/node';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -7,6 +8,14 @@ import walletRoutes from './routes/wallet';
 import yieldRoutes from './routes/yield';
 import healthRoutes from './routes/health';
 import { authenticate, logAuthMode } from './lib/auth';
+
+// Error monitoring — no-op unless SENTRY_DSN is configured.
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: Boolean(process.env.SENTRY_DSN),
+  tracesSampleRate: 0.1,
+  environment: process.env.NODE_ENV ?? 'development',
+});
 
 const server = Fastify({
   logger: {
@@ -66,6 +75,7 @@ async function build() {
 
   server.setErrorHandler((err, _req, reply) => {
     server.log.error(err);
+    Sentry.captureException(err);
     reply.code(500).send({ success: false, error: 'Internal server error' });
   });
 

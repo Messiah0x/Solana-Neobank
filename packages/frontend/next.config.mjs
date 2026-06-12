@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 // Backend origin used by the same-origin API proxy (see rewrites below).
 // Falls back to localhost for local dev.
 const BACKEND_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -39,4 +41,11 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Source-map upload only happens when SENTRY_AUTH_TOKEN is configured;
+// otherwise this wrapper just wires up runtime instrumentation.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  disableLogger: true,
+  widenClientFileUpload: false,
+  telemetry: false,
+});

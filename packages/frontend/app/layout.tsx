@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Inter } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
+import { Analytics } from '@vercel/analytics/react';
 import { PrivyAuthProvider } from '@/components/providers/PrivyAuthProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
@@ -36,11 +37,35 @@ export const viewport: Viewport = {
   themeColor: '#0A0A0A',
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://avanor.app';
+
 export const metadata: Metadata = {
-  title: 'Avanor — Your money, always earning',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Avanor — Your money, always earning',
+    template: '%s | Avanor',
+  },
   description:
     'The first non-custodial private banking platform on Solana. Earn DeFi yield automatically. Spend anywhere with Visa. You hold the keys.',
-  keywords: ['solana', 'neobank', 'defi', 'yield', 'usdc', 'crypto', 'avanor'],
+  keywords: ['solana', 'neobank', 'defi', 'yield', 'usdc', 'crypto', 'avanor', 'non-custodial', 'marginfi'],
+  applicationName: 'Avanor',
+  openGraph: {
+    type: 'website',
+    siteName: 'Avanor',
+    title: 'Avanor — Your money, always earning',
+    description:
+      'The first non-custodial neobank on Solana. Earn DeFi yield automatically. You hold the keys.',
+    url: SITE_URL,
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Avanor — non-custodial neobank on Solana' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Avanor — Your money, always earning',
+    description:
+      'The first non-custodial neobank on Solana. Earn DeFi yield automatically. You hold the keys.',
+    images: ['/og.png'],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -58,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ToastProvider>{children}</ToastProvider>
             </PrivyAuthProvider>
           </ThemeProvider>
+          <Analytics />
         </body>
     </html>
   );

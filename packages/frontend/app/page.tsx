@@ -27,7 +27,7 @@ export default function HomePage() {
             whileTap={{ scale: 0.98 }}
             className="px-4 py-2 bg-accent hover:bg-accent-hover text-[#0A0A0A] text-sm font-semibold rounded-lg transition-colors"
           >
-            Sign In
+            Launch App
           </motion.button>
         </Link>
       </nav>
@@ -75,7 +75,7 @@ export default function HomePage() {
                   className="px-8 py-3.5 font-semibold rounded-xl transition-colors text-sm text-[#0A0A0A]"
                   style={{ background: 'var(--gradient-gold)' }}
                 >
-                  Get Started
+                  Launch App
                 </motion.button>
               </Link>
             </div>
@@ -100,11 +100,16 @@ export default function HomePage() {
 
       {/* Footer disclaimer */}
       <footer className="relative z-10 py-6 px-6 text-center">
-        <p className="text-[11px] text-white/20 leading-relaxed max-w-md mx-auto">
+        <p className="text-[11px] text-white/20 leading-relaxed max-w-md mx-auto mb-4">
           Avanor is in open beta on Solana Devnet — no real funds are involved at this stage.
           Yield is variable and provided by the MarginFi protocol; Avanor charges a 10% performance
           fee on yield earned, never on your principal.
         </p>
+        <div className="flex items-center justify-center gap-5 text-[11px] text-white/25">
+          <Link href="/legal/terms" className="hover:text-white/50 transition-colors">Terms of Service</Link>
+          <span className="text-white/10">·</span>
+          <Link href="/legal/privacy" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
+        </div>
       </footer>
     </div>
   );
