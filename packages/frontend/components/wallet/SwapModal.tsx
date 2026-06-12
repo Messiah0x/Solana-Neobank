@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSolanaWallets } from '@privy-io/react-auth';
 import { Connection, VersionedTransaction } from '@solana/web3.js';
+import { explorerTxUrl } from '@/lib/format';
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 const USDC_MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
@@ -184,9 +185,7 @@ export function SwapModal({ solBalance, onClose, onSuccess }: Props) {
     amountNum > 0 &&
     !quoteError;
 
-  const explorerUrl = txSig
-    ? `https://explorer.solana.com/tx/${txSig}?cluster=devnet`
-    : null;
+  const explorerUrl = txSig ? explorerTxUrl(txSig) : null;
 
   return (
     <AnimatePresence>

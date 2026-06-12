@@ -9,6 +9,7 @@ import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { fetchMainnetBalancesFromChain } from '@/lib/chain';
 import { useSolPrice } from '@/lib/useSolPrice';
+import { fmtUsd, shortAddr } from '@/lib/format';
 
 const STORAGE_KEY = 'avanor_portfolio_wallets';
 
@@ -32,14 +33,6 @@ function isValidAddress(address: string): boolean {
   } catch {
     return false;
   }
-}
-
-function fmtUsd(n: number): string {
-  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-}
-
-function shortAddr(addr: string): string {
-  return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 }
 
 export default function PortfolioPage() {

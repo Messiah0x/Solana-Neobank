@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useSolPrice } from '@/lib/useSolPrice';
+import { useAirdrop } from '@/lib/hooks/useAirdrop';
+import { shortAddr } from '@/lib/format';
 
 interface Props {
   usdc: number;
@@ -16,17 +17,14 @@ interface Props {
   onRefresh?: () => void;
 }
 
-type AirdropState = 'idle' | 'loading' | 'success' | 'error';
-
 export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, onAirdrop, onRefresh }: Props) {
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [airdropState, setAirdropState] = useState<AirdropState>('idle');
-  const [usdcAirdropState, setUsdcAirdropState] = useState<AirdropState>('idle');
-  const truncated = publicKey ? `${publicKey.slice(0, 4)}···${publicKey.slice(-4)}` : '';
+  const truncated = publicKey ? shortAddr(publicKey) : '';
 
   const solPrice = useSolPrice();
   const totalUsd = usdc + sol * solPrice;
+  const { solState: airdropState, usdcState: usdcAirdropState, requestSol: handleAirdrop, requestUsdc: handleUsdcAirdrop } = useAirdrop(publicKey, { onSuccess: onAirdrop });
 
   async function handleCopyAddress() {
     if (!publicKey) return;
@@ -36,47 +34,6 @@ export function BalanceHero({ usdc, sol, apy, hasYield, isLoading, publicKey, on
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard unavailable — ignore; the receive modal shows the full address.
-    }
-  }
-
-  async function handleAirdrop() {
-    if (!publicKey || airdropState === 'loading') return;
-    setAirdropState('loading');
-    try {
-      const connection = new Connection(
-        process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://api.devnet.solana.com',
-        'confirmed',
-      );
-      const pubkey = new PublicKey(publicKey);
-      const sig = await connection.requestAirdrop(pubkey, LAMPORTS_PER_SOL);
-      await connection.confirmTransaction(sig);
-      setAirdropState('success');
-      onAirdrop?.();
-      setTimeout(() => setAirdropState('idle'), 3000);
-    } catch (err) {
-      console.error('[airdrop]', err);
-      setAirdropState('error');
-      setTimeout(() => setAirdropState('idle'), 6000);
-    }
-  }
-
-  async function handleUsdcAirdrop() {
-    if (!publicKey || usdcAirdropState === 'loading') return;
-    setUsdcAirdropState('loading');
-    try {
-      const res = await fetch('/api/faucet/usdc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: publicKey }),
-      });
-      if (!res.ok) throw new Error(`Faucet returned ${res.status}`);
-      setUsdcAirdropState('success');
-      onAirdrop?.();
-      setTimeout(() => setUsdcAirdropState('idle'), 3000);
-    } catch (err) {
-      console.error('[usdc faucet]', err);
-      setUsdcAirdropState('error');
-      setTimeout(() => setUsdcAirdropState('idle'), 6000);
     }
   }
 

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useRouter } from 'next/navigation';
 import { AvanorLogo } from '@/components/brand/AvanorLogo';
+import { useAirdrop } from '@/lib/hooks/useAirdrop';
+import { shortAddr } from '@/lib/format';
 
 interface Props {
   publicKey: string;
@@ -12,8 +13,6 @@ interface Props {
   apy?: number;
   onComplete: () => void;
 }
-
-type AirdropState = 'idle' | 'loading' | 'success' | 'error';
 
 const TOTAL_STEPS = 3;
 
@@ -41,14 +40,10 @@ export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [solState, setSolState] = useState<AirdropState>('idle');
-  const [usdcState, setUsdcState] = useState<AirdropState>('idle');
   const [solReceived, setSolReceived] = useState(false);
   const [usdcReceived, setUsdcReceived] = useState(false);
 
-  const truncated = publicKey
-    ? `${publicKey.slice(0, 6)}···${publicKey.slice(-6)}`
-    : '';
+  const truncated = publicKey ? shortAddr(publicKey, 6) : '';
 
   function dismiss() {
     localStorage.setItem('avanor_onboarded', '1');
@@ -66,44 +61,14 @@ export function OnboardingModal({ publicKey, apy = 5.2, onComplete }: Props) {
     router.push('/dashboard/yield');
   }
 
-  async function handleSolAirdrop() {
-    if (!publicKey || solState === 'loading') return;
-    setSolState('loading');
-    try {
-      const connection = new Connection(
-        process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://api.devnet.solana.com',
-        'confirmed',
-      );
-      const pubkey = new PublicKey(publicKey);
-      const sig = await connection.requestAirdrop(pubkey, LAMPORTS_PER_SOL);
-      await connection.confirmTransaction(sig);
-      setSolState('success');
-      setSolReceived(true);
-      setTimeout(() => setSolState('idle'), 3000);
-    } catch {
-      setSolState('error');
-      setTimeout(() => setSolState('idle'), 8000);
-    }
-  }
-
-  async function handleUsdcAirdrop() {
-    if (!publicKey || usdcState === 'loading') return;
-    setUsdcState('loading');
-    try {
-      const res = await fetch('/api/faucet/usdc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: publicKey }),
-      });
-      if (!res.ok) throw new Error(`Faucet returned ${res.status}`);
-      setUsdcState('success');
-      setUsdcReceived(true);
-      setTimeout(() => setUsdcState('idle'), 3000);
-    } catch {
-      setUsdcState('error');
-      setTimeout(() => setUsdcState('idle'), 8000);
-    }
-  }
+  const { solState, requestSol: handleSolAirdrop } = useAirdrop(publicKey, {
+    errorTimeoutMs: 8000,
+    onSuccess: () => setSolReceived(true),
+  });
+  const { usdcState, requestUsdc: handleUsdcAirdrop } = useAirdrop(publicKey, {
+    errorTimeoutMs: 8000,
+    onSuccess: () => setUsdcReceived(true),
+  });
 
   // Close on Escape
   useEffect(() => {

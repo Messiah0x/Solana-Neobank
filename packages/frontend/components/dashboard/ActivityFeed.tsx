@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { shortAddr, explorerTxUrl } from '@/lib/format';
 
 interface Transaction {
   signature: string;
@@ -42,11 +43,9 @@ function formatAmount(
 }
 
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
-  const short = `${tx.signature.slice(0, 6)}···${tx.signature.slice(-4)}`;
-  const counterpartyShort = tx.counterparty
-    ? `${tx.counterparty.slice(0, 6)}···${tx.counterparty.slice(-4)}`
-    : null;
-  const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
+  const short = shortAddr(tx.signature, 6);
+  const counterpartyShort = tx.counterparty ? shortAddr(tx.counterparty, 6) : null;
+  const explorerUrl = explorerTxUrl(tx.signature);
   const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
   const amountStr = formatAmount(tx.amount, tx.type, tx.token ?? null);
   const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';

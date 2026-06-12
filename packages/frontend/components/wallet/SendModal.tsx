@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSolanaWallets } from '@privy-io/react-auth';
 import { useToast } from '@/lib/useToast';
+import { explorerTxUrl } from '@/lib/format';
 import {
   Connection,
   PublicKey,
@@ -146,9 +147,7 @@ export function SendModal({ usdcBalance, onClose, onSuccess }: Props) {
     setTxSig(null);
   }
 
-  const explorerUrl = txSig
-    ? `https://explorer.solana.com/tx/${txSig}?cluster=devnet`
-    : null;
+  const explorerUrl = txSig ? explorerTxUrl(txSig) : null;
 
   return (
     <AnimatePresence>

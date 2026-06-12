@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { getWallet } from '@/lib/api';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
+import { shortAddr } from '@/lib/format';
 import { useTheme } from '@/components/providers/ThemeProvider';
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -206,7 +207,7 @@ export default function SettingsPage() {
 
   const { name, email, image, provider, initials } = getPrivyUserInfo(user ?? null);
   const publicKey = wallet?.publicKey ?? null;
-  const shortKey = publicKey ? `${publicKey.slice(0, 6)}···${publicKey.slice(-6)}` : null;
+  const shortKey = publicKey ? shortAddr(publicKey, 6) : null;
   const createdAt = wallet?.createdAt
     ? new Date(wallet.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;

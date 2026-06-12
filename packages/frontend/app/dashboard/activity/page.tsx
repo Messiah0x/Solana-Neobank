@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { getWalletTransactions, getWallet } from '@/lib/api';
 import { fetchTransactionsFromChain } from '@/lib/chain';
+import { shortAddr, explorerTxUrl } from '@/lib/format';
 
 type Filter = 'all' | 'received' | 'sent' | 'yield';
 
@@ -90,11 +91,9 @@ function formatAmount(
 }
 
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
-  const short = `${tx.signature.slice(0, 8)}···${tx.signature.slice(-6)}`;
-  const counterpartyShort = tx.counterparty
-    ? `${tx.counterparty.slice(0, 6)}···${tx.counterparty.slice(-4)}`
-    : null;
-  const explorerUrl = `https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`;
+  const short = shortAddr(tx.signature, 8);
+  const counterpartyShort = tx.counterparty ? shortAddr(tx.counterparty, 6) : null;
+  const explorerUrl = explorerTxUrl(tx.signature);
   const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
   const amountStr = formatAmount(tx.amount, tx.type, tx.token ?? null);
   const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';
