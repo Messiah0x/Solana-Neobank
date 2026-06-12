@@ -129,3 +129,67 @@ export async function confirmWithdraw(userId: string, amountUsdc: number, signat
   const { data } = await api.post('/api/yield/withdraw/confirm', { userId, amountUsdc, signature });
   return data.data;
 }
+
+// ─── Coin flip (Double or Nothing) ──────────────────────────────────────────
+
+export type FlipCurrency = 'SOL' | 'USDC';
+
+export interface FlipHouseStatus {
+  enabled: boolean;
+  housePublicKey?: string;
+  maxBet?: { SOL: number; USDC: number };
+}
+
+export interface PreparedFlipTx {
+  transaction: string;
+  blockhash: string;
+  lastValidBlockHeight: number;
+  housePublicKey: string;
+}
+
+export interface FlipResult {
+  result: 'win' | 'lose';
+  payout: number;
+  payoutSignature: string | null;
+}
+
+export interface FlipRecord {
+  id: string;
+  currency: FlipCurrency;
+  amount: number;
+  result: 'win' | 'lose';
+  betSignature: string;
+  payoutSignature: string | null;
+  createdAt: string;
+}
+
+export async function getFlipHouse(): Promise<FlipHouseStatus> {
+  const { data } = await api.get('/api/flip/house');
+  return data.data;
+}
+
+export async function prepareFlip(userId: string, currency: FlipCurrency, amount: number): Promise<PreparedFlipTx> {
+  const { data } = await api.post('/api/flip/prepare', { userId, currency, amount });
+  return data.data;
+}
+
+export async function resolveFlip(
+  userId: string,
+  currency: FlipCurrency,
+  amount: number,
+  betSignature: string,
+): Promise<FlipResult> {
+  // Resolution waits for on-chain confirmation and (on a win) the payout
+  // transaction, which can exceed the default 15s timeout.
+  const { data } = await api.post(
+    '/api/flip/resolve',
+    { userId, currency, amount, betSignature },
+    { timeout: 90_000 },
+  );
+  return data.data;
+}
+
+export async function getFlipHistory(userId: string): Promise<FlipRecord[]> {
+  const { data } = await api.get(`/api/flip/history/${encodeURIComponent(userId)}`);
+  return data.data;
+}

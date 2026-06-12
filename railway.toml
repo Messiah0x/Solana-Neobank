@@ -3,7 +3,8 @@ builder = "NIXPACKS"
 buildCommand = "npm install && npm run db:generate && npm run build --workspace=packages/backend"
 
 [deploy]
-startCommand = "npm run start --workspace=packages/backend"
+# db push keeps the schema in sync on deploy (additive changes only).
+startCommand = "npm run db:push --workspace=packages/backend -- --skip-generate && npm run start --workspace=packages/backend"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"

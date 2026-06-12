@@ -6,6 +6,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import walletRoutes from './routes/wallet';
 import yieldRoutes from './routes/yield';
+import flipRoutes from './routes/flip';
 import healthRoutes from './routes/health';
 import { authenticate, logAuthMode } from './lib/auth';
 
@@ -71,6 +72,7 @@ async function build() {
 
   await server.register(walletRoutes, { prefix: '/api/wallet' });
   await server.register(yieldRoutes, { prefix: '/api/yield' });
+  await server.register(flipRoutes, { prefix: '/api/flip' });
   await server.register(healthRoutes, { prefix: '/api' });
 
   server.setErrorHandler((err, _req, reply) => {
@@ -96,8 +98,8 @@ async function start() {
     const port = Number(process.env.PORT ?? 4000);
     // '::' binds dual-stack (IPv6 + IPv4). Railway's public edge proxy reaches
     // containers over IPv6 — binding only 0.0.0.0 makes public traffic 502
-    // even while IPv4 healthchecks pass.
-    await app.listen({ port, host: '::' });
+    // even while IPv4 healthchecks pass. HOST overrides for IPv4-only envs.
+    await app.listen({ port, host: process.env.HOST ?? '::' });
   } catch (err) {
     server.log.error(err);
     process.exit(1);

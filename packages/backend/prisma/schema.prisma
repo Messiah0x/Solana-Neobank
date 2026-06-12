@@ -50,6 +50,25 @@ model YieldTxn {
   @@map("yield_txns")
 }
 
+// Ledger of Double or Nothing coin flips. The bet is a real on-chain
+// transfer from the user's wallet to the house wallet; the unique
+// betSignature makes resolution idempotent so a bet can never be
+// double-resolved or double-paid.
+model CoinFlip {
+  id              String   @id @default(cuid())
+  userId          String
+  currency        String // "SOL" | "USDC"
+  amount          Float
+  betSignature    String   @unique
+  result          String // "win" | "lose"
+  payoutSignature String?
+  payoutError     String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@map("coin_flips")
+}
+
 model Wallet {
   id           String   @id @default(cuid())
   userId       String   @unique

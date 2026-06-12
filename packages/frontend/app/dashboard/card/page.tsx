@@ -3,17 +3,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
+import useSWR from 'swr';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
+import { getWalletBalance, getFlipHouse, getFlipHistory, type FlipCurrency, type FlipResult } from '@/lib/api';
+import { useCoinFlip } from '@/lib/useCoinFlip';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { AvanorLogo } from '@/components/brand/AvanorLogo';
 import { DoubleOrNothingModal } from '@/components/card/DoubleOrNothingModal';
-import { usePlayBalance, type PlayCurrency } from '@/lib/hooks/usePlayBalance';
 
-const BET_PRESETS: Record<PlayCurrency, number[]> = {
-  usdc: [10, 25, 50, 100],
-  sol: [0.1, 0.25, 0.5, 1],
+const BET_PRESETS: Record<FlipCurrency, number[]> = {
+  USDC: [1, 5, 10, 25],
+  SOL: [0.05, 0.1, 0.25, 0.5],
 };
 
 function VisaWordmark() {
@@ -57,40 +59,53 @@ function ChipIcon() {
   );
 }
 
-function fmtBalance(n: number, currency: PlayCurrency) {
-  if (currency === 'usdc') {
+function fmtAmount(n: number, currency: FlipCurrency) {
+  if (currency === 'USDC') {
     return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
-  return `${n.toLocaleString('en-US', { maximumFractionDigits: 3 })} SOL`;
+  return `${n.toLocaleString('en-US', { maximumFractionDigits: 4 })} SOL`;
 }
 
 export default function CardPage() {
   const { user } = usePrivy();
   const { name } = getPrivyUserInfo(user ?? null);
   const displayName = (name || 'AVANOR MEMBER').toUpperCase();
+  const userId = user?.id ?? null;
 
-  const { balances, history, ready, resolveFlip, reset } = usePlayBalance();
-  const [currency, setCurrency] = useState<PlayCurrency>('usdc');
-  const [betAmount, setBetAmount] = useState(BET_PRESETS.usdc[1]);
-  const [pendingFlip, setPendingFlip] = useState<{ currency: PlayCurrency; amount: number } | null>(null);
+  const { flip, hasWallet } = useCoinFlip(userId);
 
-  const balance = balances[currency];
+  const { data: balance, mutate: mutateBalance } = useSWR(
+    userId ? `balance-${userId}` : null,
+    () => getWalletBalance(userId!),
+    { refreshInterval: 30_000 },
+  );
+  const { data: house } = useSWR('flip-house', getFlipHouse, { refreshInterval: 60_000 });
+  const { data: history, mutate: mutateHistory } = useSWR(
+    userId ? `flips-${userId}` : null,
+    () => getFlipHistory(userId!),
+  );
+
+  const [currency, setCurrency] = useState<FlipCurrency>('USDC');
+  const [betAmount, setBetAmount] = useState(BET_PRESETS.USDC[1]);
+  const [pendingFlip, setPendingFlip] = useState<{ currency: FlipCurrency; amount: number } | null>(null);
+
+  const walletBalance = currency === 'USDC' ? balance?.usdc ?? 0 : balance?.sol ?? 0;
+  const maxBet = house?.enabled ? house.maxBet?.[currency] ?? 0 : 0;
+  const gameLive = Boolean(house?.enabled && hasWallet);
   const presets = BET_PRESETS[currency];
 
-  function selectCurrency(next: PlayCurrency) {
+  const betTooHigh = betAmount > walletBalance || betAmount > maxBet;
+  const canFlip = gameLive && betAmount > 0 && !betTooHigh;
+
+  function selectCurrency(next: FlipCurrency) {
     setCurrency(next);
     setBetAmount(BET_PRESETS[next][1]);
   }
 
-  function handleFlip() {
-    if (betAmount <= 0 || betAmount > balance) return;
-    setPendingFlip({ currency, amount: betAmount });
-  }
-
-  function handleResolved(result: 'win' | 'lose') {
-    if (!pendingFlip) return;
-    resolveFlip(pendingFlip.currency, pendingFlip.amount, result);
+  function handleSettled(_result: FlipResult) {
     setPendingFlip(null);
+    mutateBalance();
+    mutateHistory();
   }
 
   return (
@@ -201,20 +216,26 @@ export default function CardPage() {
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-semibold text-ivory">Double or Nothing</p>
                 <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide"
-                  style={{ background: 'rgba(212,175,127,0.1)', color: 'rgba(212,175,127,0.7)', border: '1px solid rgba(212,175,127,0.18)' }}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide ${
+                    gameLive ? '' : 'opacity-60'
+                  }`}
+                  style={
+                    gameLive
+                      ? { background: 'rgba(34,197,94,0.1)', color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(34,197,94,0.2)' }
+                      : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)' }
+                  }
                 >
-                  Just for fun
+                  {gameLive ? 'Live · real funds' : 'Offline'}
                 </span>
               </div>
               <p className="text-xs text-white/30 mb-4 leading-relaxed">
-                Flip a coin for a chance to double your play balance. Fair 50/50 odds, settled instantly.
-                This is a separate play balance — it's not connected to your real SOL/USDC or any purchase.
+                Bet real SOL or USDC from your wallet on a fair 50/50 coin flip. Win pays double your
+                bet straight back to your wallet; lose and the house keeps it. Settled on-chain on Solana devnet.
               </p>
 
               {/* Currency toggle */}
               <div className="flex gap-2 mb-4">
-                {(['usdc', 'sol'] as const).map((c) => (
+                {(['USDC', 'SOL'] as const).map((c) => (
                   <button
                     key={c}
                     onClick={() => selectCurrency(c)}
@@ -224,7 +245,7 @@ export default function CardPage() {
                         : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08]'
                     }`}
                   >
-                    {c.toUpperCase()}
+                    {c}
                   </button>
                 ))}
               </div>
@@ -232,17 +253,17 @@ export default function CardPage() {
               {/* Balance */}
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 mb-4 flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-0.5">Play balance</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-0.5">Wallet balance</p>
                   <p className="font-mono text-lg font-bold text-white/75">
-                    {ready ? fmtBalance(balance, currency) : '—'}
+                    {balance ? fmtAmount(walletBalance, currency) : '—'}
                   </p>
                 </div>
-                <button
-                  onClick={reset}
-                  className="text-[11px] font-semibold text-white/30 hover:text-white/50 transition-colors px-2.5 py-1.5 rounded-lg border border-white/[0.07] hover:bg-white/[0.04]"
-                >
-                  Reset
-                </button>
+                {house?.enabled && (
+                  <div className="text-right">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/25 mb-0.5">Max bet</p>
+                    <p className="font-mono text-sm font-semibold text-white/45">{fmtAmount(maxBet, currency)}</p>
+                  </div>
+                )}
               </div>
 
               {/* Bet presets */}
@@ -251,33 +272,39 @@ export default function CardPage() {
                   <button
                     key={amt}
                     onClick={() => setBetAmount(amt)}
-                    disabled={amt > balance}
+                    disabled={!gameLive || amt > walletBalance || amt > maxBet}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 ${
                       betAmount === amt
                         ? 'bg-accent text-[#0A0A0A]'
                         : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08]'
-                    } ${amt > balance ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    } ${!gameLive || amt > walletBalance || amt > maxBet ? 'opacity-30 cursor-not-allowed' : ''}`}
                   >
-                    {currency === 'usdc' ? `$${amt}` : `${amt} SOL`}
+                    {currency === 'USDC' ? `$${amt}` : `${amt} SOL`}
                   </button>
                 ))}
               </div>
 
               <button
-                onClick={handleFlip}
-                disabled={!ready || betAmount <= 0 || betAmount > balance}
+                onClick={() => canFlip && setPendingFlip({ currency, amount: betAmount })}
+                disabled={!canFlip}
                 className={`w-full py-3 rounded-xl font-semibold text-sm transition-opacity ${
-                  !ready || betAmount > balance
-                    ? 'bg-white/10 text-white/30 cursor-not-allowed'
-                    : 'bg-accent text-[#0A0A0A] hover:opacity-90'
+                  canFlip ? 'bg-accent text-[#0A0A0A] hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'
                 }`}
               >
-                {betAmount > balance ? 'Insufficient play balance' : `Flip for ${fmtBalance(betAmount, currency)}`}
+                {!house?.enabled
+                  ? 'Game offline — house wallet not configured'
+                  : !hasWallet
+                  ? 'Connect a wallet to play'
+                  : betAmount > walletBalance
+                  ? 'Insufficient wallet balance'
+                  : betAmount > maxBet
+                  ? `Max bet is ${fmtAmount(maxBet, currency)} right now`
+                  : `Flip for ${fmtAmount(betAmount, currency)}`}
               </button>
             </motion.div>
 
             {/* Flip stats */}
-            {history.length > 0 && (
+            {history && history.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -316,7 +343,7 @@ export default function CardPage() {
               transition={{ delay: 0.2, duration: 0.4 }}
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mb-3">Flip history</p>
-              {history.length === 0 ? (
+              {!history || history.length === 0 ? (
                 <div
                   className="rounded-2xl border border-white/[0.06] py-12 px-6 flex flex-col items-center text-center"
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)' }}
@@ -336,7 +363,7 @@ export default function CardPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-white/75">
-                            {h.result === 'win' ? 'Won' : 'Lost'} · {h.currency.toUpperCase()}
+                            {h.result === 'win' ? 'Won' : 'Lost'} · {h.currency}
                           </p>
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide ${
@@ -349,12 +376,33 @@ export default function CardPage() {
                           </span>
                         </div>
                         <p className="text-[11px] text-white/30 mt-0.5">
-                          {new Date(h.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                          {' · balance '}{fmtBalance(h.balanceAfter, h.currency)}
+                          {new Date(h.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          {' · '}
+                          <a
+                            href={`https://explorer.solana.com/tx/${h.betSignature}?cluster=devnet`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-white/50 underline underline-offset-2"
+                          >
+                            bet tx
+                          </a>
+                          {h.payoutSignature && (
+                            <>
+                              {' · '}
+                              <a
+                                href={`https://explorer.solana.com/tx/${h.payoutSignature}?cluster=devnet`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-white/50 underline underline-offset-2"
+                              >
+                                payout tx
+                              </a>
+                            </>
+                          )}
                         </p>
                       </div>
                       <p className={`font-mono text-sm font-bold flex-shrink-0 ml-3 ${h.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
-                        {h.result === 'win' ? '+' : '-'}{fmtBalance(h.amount, h.currency)}
+                        {h.result === 'win' ? '+' : '-'}{fmtAmount(h.amount, h.currency)}
                       </p>
                     </div>
                   ))}
@@ -372,8 +420,9 @@ export default function CardPage() {
           <DoubleOrNothingModal
             amount={pendingFlip.amount}
             currency={pendingFlip.currency}
+            executeFlip={() => flip(pendingFlip.currency, pendingFlip.amount)}
             onClose={() => setPendingFlip(null)}
-            onResolved={handleResolved}
+            onSettled={handleSettled}
           />
         )}
       </AnimatePresence>

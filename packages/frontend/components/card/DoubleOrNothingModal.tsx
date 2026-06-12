@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { PlayCurrency } from '@/lib/hooks/usePlayBalance';
+import type { FlipCurrency, FlipResult } from '@/lib/api';
 
 interface DoubleOrNothingModalProps {
   amount: number;
-  currency: PlayCurrency;
+  currency: FlipCurrency;
+  executeFlip: () => Promise<FlipResult>;
   onClose: () => void;
-  onResolved: (result: 'win' | 'lose') => void;
+  onSettled: (result: FlipResult) => void;
 }
 
-const SPIN_DURATION = 2.4;
+const LANDING_DURATION = 1.4;
 
 function CoinFace({ side }: { side: 'win' | 'lose' }) {
   return (
@@ -42,38 +43,60 @@ function CoinFace({ side }: { side: 'win' | 'lose' }) {
   );
 }
 
-export function DoubleOrNothingModal({ amount, currency, onClose, onResolved }: DoubleOrNothingModalProps) {
-  const [phase, setPhase] = useState<'idle' | 'flipping' | 'result'>('idle');
-  const [result, setResult] = useState<'win' | 'lose' | null>(null);
+type Phase = 'idle' | 'flipping' | 'result' | 'error';
+
+export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, onSettled }: DoubleOrNothingModalProps) {
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [outcome, setOutcome] = useState<FlipResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [spinFast, setSpinFast] = useState(false);
+  const rotationRef = useRef(0);
 
-  const symbol = currency === 'usdc' ? '$' : '';
-  const suffix = currency === 'usdc' ? '' : ' SOL';
-  const fmt = (n: number) => `${symbol}${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}${suffix}`;
+  const symbol = currency === 'USDC' ? '$' : '';
+  const suffix = currency === 'USDC' ? '' : ' SOL';
+  const fmt = (n: number) => `${symbol}${n.toLocaleString('en-US', { maximumFractionDigits: 4 })}${suffix}`;
 
-  function flipCoin(): boolean {
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      const buf = new Uint32Array(1);
-      crypto.getRandomValues(buf);
-      return buf[0] % 2 === 0;
-    }
-    return Math.random() < 0.5;
-  }
+  // Keep the coin spinning while the bet is being signed, confirmed
+  // on-chain, and resolved server-side — the duration is unknown.
+  useEffect(() => {
+    if (!spinFast) return;
+    const interval = setInterval(() => {
+      rotationRef.current += 360;
+      setRotation(rotationRef.current);
+    }, 450);
+    return () => clearInterval(interval);
+  }, [spinFast]);
 
-  function flip() {
+  async function startFlip() {
     if (phase !== 'idle') return;
-    const isWin = flipCoin();
-    const outcome: 'win' | 'lose' = isWin ? 'win' : 'lose';
-    // Land showing the correct face: win = multiple of 360, lose = 180 + multiple of 360
-    const fullSpins = 5;
-    const target = fullSpins * 360 + (isWin ? 0 : 180);
-    setRotation(target);
     setPhase('flipping');
-    setTimeout(() => {
-      setResult(outcome);
-      setPhase('result');
-    }, SPIN_DURATION * 1000);
+    setSpinFast(true);
+    try {
+      const result = await executeFlip();
+      setSpinFast(false);
+      // Land on the correct face: win shows the front (multiple of 360),
+      // lose shows the back (180 offset), with a couple of extra spins.
+      const base = Math.ceil(rotationRef.current / 360) * 360;
+      const target = base + 2 * 360 + (result.result === 'lose' ? 180 : 0);
+      rotationRef.current = target;
+      setRotation(target);
+      setTimeout(() => {
+        setOutcome(result);
+        setPhase('result');
+      }, LANDING_DURATION * 1000);
+    } catch (e) {
+      setSpinFast(false);
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+      setPhase('error');
+    }
   }
+
+  function finish() {
+    if (outcome) onSettled(outcome);
+  }
+
+  const dismissible = phase === 'idle' || phase === 'error';
 
   return (
     <AnimatePresence>
@@ -83,7 +106,7 @@ export function DoubleOrNothingModal({ amount, currency, onClose, onResolved }: 
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ background: 'rgba(8,6,4,0.85)', backdropFilter: 'blur(8px)' }}
-        onClick={() => phase !== 'flipping' && onClose()}
+        onClick={() => dismissible && onClose()}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -105,19 +128,25 @@ export function DoubleOrNothingModal({ amount, currency, onClose, onResolved }: 
             {fmt(amount)} bet
           </h2>
           <p className="text-xs text-white/35 mb-6 leading-relaxed">
-            {phase === 'idle' && 'Tap the coin to flip. Win doubles your bet, lose forfeits it. Fair 50/50 odds.'}
-            {phase === 'flipping' && 'Flipping...'}
-            {phase === 'result' && result === 'win' && `You won! +${fmt(amount)} added to your play balance.`}
-            {phase === 'result' && result === 'lose' && `Tough luck — -${fmt(amount)} from your play balance.`}
+            {phase === 'idle' &&
+              `Tap the coin to bet ${fmt(amount)}. You'll sign a real transfer to the house wallet — win pays ${fmt(amount * 2)} back, lose forfeits your bet.`}
+            {phase === 'flipping' && 'Approve the transaction in your wallet, then hold tight — settling on-chain…'}
+            {phase === 'result' && outcome?.result === 'win' && `You won! ${fmt(amount * 2)} has been sent to your wallet.`}
+            {phase === 'result' && outcome?.result === 'lose' && 'Tough luck — the house keeps this one.'}
+            {phase === 'error' && (error ?? 'Something went wrong')}
           </p>
 
           <div style={{ perspective: 800 }} className="mb-6">
             <motion.button
               type="button"
-              onClick={flip}
+              onClick={startFlip}
               disabled={phase !== 'idle'}
               animate={{ rotateY: rotation }}
-              transition={{ duration: SPIN_DURATION, ease: [0.22, 0.68, 0, 1] }}
+              transition={
+                spinFast
+                  ? { duration: 0.45, ease: 'linear' }
+                  : { duration: LANDING_DURATION, ease: [0.22, 0.68, 0, 1] }
+              }
               whileHover={phase === 'idle' ? { scale: 1.04 } : undefined}
               whileTap={phase === 'idle' ? { scale: 0.97 } : undefined}
               className="relative w-32 h-32 rounded-full"
@@ -131,7 +160,7 @@ export function DoubleOrNothingModal({ amount, currency, onClose, onResolved }: 
             </motion.button>
           </div>
 
-          {phase === 'result' && result && (
+          {phase === 'result' && outcome && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -141,24 +170,43 @@ export function DoubleOrNothingModal({ amount, currency, onClose, onResolved }: 
               <div
                 className="rounded-2xl p-4 mb-4"
                 style={{
-                  background: result === 'win' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                  border: `1px solid ${result === 'win' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                  background: outcome.result === 'win' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                  border: `1px solid ${outcome.result === 'win' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
                 }}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 mb-1">
                   Result
                 </p>
-                <p className={`text-2xl font-bold font-mono ${result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
-                  {result === 'win' ? '+' : '-'}{fmt(amount)}
+                <p className={`text-2xl font-bold font-mono ${outcome.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                  {outcome.result === 'win' ? '+' : '-'}{fmt(amount)}
                 </p>
+                {outcome.result === 'win' && outcome.payoutSignature && (
+                  <a
+                    href={`https://explorer.solana.com/tx/${outcome.payoutSignature}?cluster=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 text-[11px] text-accent/70 hover:text-accent underline underline-offset-2"
+                  >
+                    View payout on explorer
+                  </a>
+                )}
               </div>
               <button
-                onClick={() => onResolved(result)}
+                onClick={finish}
                 className="w-full py-3 rounded-xl font-semibold text-sm bg-accent text-[#0A0A0A] hover:opacity-90 transition-opacity"
               >
                 Done
               </button>
             </motion.div>
+          )}
+
+          {phase === 'error' && (
+            <button
+              onClick={onClose}
+              className="w-full py-3 rounded-xl font-semibold text-sm bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
+            >
+              Close
+            </button>
           )}
 
           {phase === 'idle' && (
