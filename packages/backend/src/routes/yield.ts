@@ -6,19 +6,26 @@ import { requestUserId } from '../lib/auth';
 // userId is optional in request bodies: in strict auth mode the identity
 // comes from the verified Privy token and any client-supplied value is
 // ignored. It is only honored as a fallback when auth is not configured.
+//
+// amountUsdc is bounded to a sane on-chain range: finite() blocks
+// Infinity/NaN, and the upper bound matches the devnet deposit cap so a
+// malformed or adversarial payload can't reach the tx-building paths with
+// values that would over/underflow downstream math.
+const amountUsdc = z.number().positive().finite().max(1_000_000_000);
+
 const depositBody = z.object({
   userId: z.string().min(1).max(128).optional(),
-  amountUsdc: z.number().positive(),
+  amountUsdc,
 });
 
 const withdrawBody = z.object({
   userId: z.string().min(1).max(128).optional(),
-  amountUsdc: z.number().positive(),
+  amountUsdc,
 });
 
 const confirmBody = z.object({
   userId: z.string().min(1).max(128).optional(),
-  amountUsdc: z.number().positive(),
+  amountUsdc,
   signature: z.string().min(32).max(128),
   marginfiAccountPk: z.string().min(32).max(64),
 });
@@ -56,7 +63,7 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/yield/deposit/prepare — build an unsigned tx for client-side signing
-  fastify.post('/deposit/prepare', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/deposit/prepare', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = depositBody.parse(req.body);
       const userId = requestUserId(req, body.userId);
@@ -71,7 +78,7 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/yield/deposit/confirm — verify the signed tx landed, record position
-  fastify.post('/deposit/confirm', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/deposit/confirm', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = confirmBody.parse(req.body);
       const userId = requestUserId(req, body.userId);
@@ -86,7 +93,7 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/yield/withdraw/prepare
-  fastify.post('/withdraw/prepare', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/withdraw/prepare', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = withdrawBody.parse(req.body);
       const userId = requestUserId(req, body.userId);
@@ -101,7 +108,7 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/yield/withdraw/confirm
-  fastify.post('/withdraw/confirm', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/withdraw/confirm', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = confirmBody.omit({ marginfiAccountPk: true }).parse(req.body);
       const userId = requestUserId(req, body.userId);
@@ -116,7 +123,7 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/yield/deposit
-  fastify.post('/deposit', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/deposit', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = depositBody.parse(req.body);
       const userId = requestUserId(req, body.userId);
@@ -131,7 +138,7 @@ export default async function yieldRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/yield/withdraw
-  fastify.post('/withdraw', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/withdraw', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = withdrawBody.parse(req.body);
       const userId = requestUserId(req, body.userId);

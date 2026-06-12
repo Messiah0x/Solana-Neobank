@@ -26,7 +26,7 @@ function handleError(err: unknown, reply: FastifyReply) {
 
 export default async function walletRoutes(fastify: FastifyInstance) {
   // POST /api/wallet/register — stores a Privy-managed wallet (public key only)
-  fastify.post('/register', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/register', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = registerWalletBody.parse(req.body);
       const userId = requestUserId(req, body.userId);
@@ -41,7 +41,7 @@ export default async function walletRoutes(fastify: FastifyInstance) {
   });
 
   // POST /api/wallet/create
-  fastify.post('/create', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/create', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const body = createWalletBody.parse(req.body);
       const userId = requestUserId(req, body.userId);
