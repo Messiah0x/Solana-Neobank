@@ -17,26 +17,56 @@ const LANDING_DURATION = 1.4;
 function CoinFace({ side }: { side: 'win' | 'lose' }) {
   return (
     <div
-      className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1"
+      className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1.5 overflow-hidden"
       style={{
-        background: 'linear-gradient(145deg, #F4E4C1 0%, #D4AF7F 45%, #8B6914 100%)',
-        border: '4px solid rgba(212,175,127,0.9)',
-        boxShadow: 'inset 0 0 24px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.5)',
+        background:
+          'radial-gradient(circle at 32% 28%, #FFF6E0 0%, #F4E4C1 22%, #D4AF7F 55%, #B8893F 80%, #8B6914 100%)',
+        border: '3px solid rgba(255,237,200,0.95)',
+        boxShadow:
+          'inset 0 3px 10px rgba(255,255,255,0.55), inset 0 -10px 22px rgba(0,0,0,0.35), 0 10px 30px rgba(0,0,0,0.55)',
         backfaceVisibility: 'hidden',
-        transform: side === 'lose' ? 'rotateY(180deg)' : undefined,
+        transform: side === 'lose' ? 'rotateX(180deg)' : undefined,
       }}
     >
+      {/* Embossed ring + spec highlight for a 3D coin feel */}
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          inset: 6,
+          border: '1.5px solid rgba(139,105,20,0.45)',
+          boxShadow: 'inset 0 1px 4px rgba(255,255,255,0.5)',
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '8%',
+          left: '14%',
+          width: '38%',
+          height: '22%',
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.55)',
+          filter: 'blur(6px)',
+          transform: 'rotate(-25deg)',
+        }}
+      />
       {side === 'win' ? (
         <>
-          <span className="text-3xl font-black text-[#1A1410]">2x</span>
-          <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A1410]">WIN</span>
+          <span
+            className="text-4xl font-black tracking-tight"
+            style={{ color: '#3A2A0E', textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}
+          >
+            2x
+          </span>
+          <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">DOUBLE</span>
         </>
       ) : (
         <>
-          <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#1A1410" strokeWidth={3}>
-            <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+          <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#3A2A0E" strokeWidth={2.5}>
+            <circle cx="12" cy="12" r="9" />
+            <path strokeLinecap="round" d="M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 1.1-.7 1.7-1.6 2.3-.9.6-1.4 1.1-1.4 2.2M12 17h.01" />
           </svg>
-          <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A1410]">LOSE</span>
+          <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">NEXT TIME</span>
         </>
       )}
     </div>
@@ -78,7 +108,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
       // Land on the correct face: win shows the front (multiple of 360),
       // lose shows the back (180 offset), with a couple of extra spins.
       const base = Math.ceil(rotationRef.current / 360) * 360;
-      const target = base + 2 * 360 + (result.result === 'lose' ? 180 : 0);
+      const target = base + 3 * 360 + (result.result === 'lose' ? 180 : 0);
       rotationRef.current = target;
       setRotation(target);
       setTimeout(() => {
@@ -121,35 +151,51 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
             boxShadow: '0 32px 64px rgba(0,0,0,0.6)',
           }}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent/70 mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent/70 mb-1">
             Double or Nothing
           </p>
           <h2 className="text-xl font-bold text-ivory mb-1">
-            {fmt(amount)} bet
+            {fmt(amount)} on the line
           </h2>
           <p className="text-xs text-white/35 mb-6 leading-relaxed">
             {phase === 'idle' &&
-              `Tap the coin to bet ${fmt(amount)}. You'll sign a real transfer to the house wallet — win pays ${fmt(amount * 2)} back, lose forfeits your bet.`}
-            {phase === 'flipping' && 'Approve the transaction in your wallet, then hold tight — settling on-chain…'}
-            {phase === 'result' && outcome?.result === 'win' && `You won! ${fmt(amount * 2)} has been sent to your wallet.`}
-            {phase === 'result' && outcome?.result === 'lose' && 'Tough luck — the house keeps this one.'}
+              `Flip the coin to wager ${fmt(amount)}. You'll sign a real transfer to the house — call it right and ${fmt(amount * 2)} lands straight back in your wallet.`}
+            {phase === 'flipping' && 'Approve the transaction in your wallet, then hold tight — the coin is in the air…'}
+            {phase === 'result' && outcome?.result === 'win' && `Heads up! ${fmt(amount * 2)} just landed in your wallet.`}
+            {phase === 'result' && outcome?.result === 'lose' && "So close — the house takes this round. Run it again?"}
             {phase === 'error' && (error ?? 'Something went wrong')}
           </p>
 
-          <div style={{ perspective: 800 }} className="mb-6">
+          <div style={{ perspective: 1000 }} className="mb-6 relative">
+            {/* Soft ambient glow beneath the coin for depth */}
+            <div
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+              style={{
+                width: 170,
+                height: 170,
+                background: 'radial-gradient(circle, rgba(212,175,127,0.35) 0%, rgba(212,175,127,0) 70%)',
+                filter: 'blur(4px)',
+              }}
+            />
             <motion.button
               type="button"
               onClick={startFlip}
               disabled={phase !== 'idle'}
-              animate={{ rotateY: rotation }}
+              animate={{
+                rotateX: rotation,
+                y: spinFast ? [0, -14, 0] : 0,
+              }}
               transition={
                 spinFast
-                  ? { duration: 0.45, ease: 'linear' }
+                  ? {
+                      rotateX: { duration: 0.45, ease: 'linear' },
+                      y: { duration: 0.45, repeat: Infinity, ease: 'easeInOut' },
+                    }
                   : { duration: LANDING_DURATION, ease: [0.22, 0.68, 0, 1] }
               }
               whileHover={phase === 'idle' ? { scale: 1.04 } : undefined}
               whileTap={phase === 'idle' ? { scale: 0.97 } : undefined}
-              className="relative w-32 h-32 rounded-full"
+              className="relative w-36 h-36 rounded-full"
               style={{
                 transformStyle: 'preserve-3d',
                 cursor: phase === 'idle' ? 'pointer' : 'default',
@@ -157,6 +203,15 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
             >
               <CoinFace side="win" />
               <CoinFace side="lose" />
+              {/* Coin edge for thickness illusion */}
+              <div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  transform: 'translateZ(-1px) scale(1.015)',
+                  background: 'linear-gradient(180deg, #8B6914 0%, #5C4410 100%)',
+                  zIndex: -1,
+                }}
+              />
             </motion.button>
           </div>
 
@@ -175,9 +230,9 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                 }}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 mb-1">
-                  Result
+                  {outcome.result === 'win' ? 'You called it' : 'Result'}
                 </p>
-                <p className={`text-2xl font-bold font-mono ${outcome.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-2xl font-bold font-mono ${outcome.result === 'win' ? 'text-green-400' : 'text-amber-400/80'}`}>
                   {outcome.result === 'win' ? '+' : '-'}{fmt(amount)}
                 </p>
                 {outcome.result === 'win' && outcome.payoutSignature && (
@@ -195,7 +250,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                 onClick={finish}
                 className="w-full py-3 rounded-xl font-semibold text-sm bg-accent text-[#0A0A0A] hover:opacity-90 transition-opacity"
               >
-                Done
+                {outcome.result === 'win' ? 'Nice' : 'Got it'}
               </button>
             </motion.div>
           )}

@@ -363,16 +363,16 @@ export default function CardPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-white/75">
-                            {h.result === 'win' ? 'Won' : 'Lost'} · {h.currency}
+                            {h.result === 'win' ? 'Won' : 'No luck'} · {h.currency}
                           </p>
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide ${
                               h.result === 'win'
                                 ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                : 'bg-amber-500/10 text-amber-400/80 border border-amber-500/20'
                             }`}
                           >
-                            {h.result === 'win' ? 'WIN' : 'LOSS'}
+                            {h.result === 'win' ? 'WIN' : 'TRY AGAIN'}
                           </span>
                         </div>
                         <p className="text-[11px] text-white/30 mt-0.5">
