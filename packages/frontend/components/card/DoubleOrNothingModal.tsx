@@ -16,58 +16,69 @@ const LANDING_DURATION = 1.4;
 
 function CoinDisc() {
   return (
-    <div
-      className="absolute inset-0 rounded-full overflow-hidden"
-      style={{
-        background:
-          'radial-gradient(circle at 32% 26%, #FFFCF2 0%, #FFF6E0 14%, #F4E4C1 34%, #D4AF7F 62%, #B8893F 86%, #8B6914 100%)',
-        boxShadow:
-          'inset 0 6px 16px rgba(255,255,255,0.65), inset 0 -16px 30px rgba(0,0,0,0.45), inset 0 0 0 7px rgba(139,105,20,0.22)',
-        backfaceVisibility: 'hidden',
-      }}
-    >
-      {/* Reeded edge — fine radial ridges around the rim */}
+    <div className="absolute inset-0 rounded-full" style={{ backfaceVisibility: 'hidden' }}>
+      {/* Thick metallic bezel — gives the disc real edge thickness */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: 'linear-gradient(135deg, #FFF6E0 0%, #E8C97A 28%, #B8893F 52%, #8B6914 78%, #F4E4C1 100%)',
+          boxShadow:
+            'inset 0 3px 5px rgba(255,255,255,0.7), inset 0 -4px 8px rgba(0,0,0,0.55), 0 1px 1px rgba(255,255,255,0.25)',
+        }}
+      />
+      {/* Recessed face */}
+      <div
+        className="absolute rounded-full overflow-hidden flex items-center justify-center"
+        style={{
+          inset: 11,
+          background: 'linear-gradient(160deg, #1C1610 0%, #0C0906 100%)',
+          boxShadow: 'inset 0 3px 8px rgba(0,0,0,0.7), inset 0 -2px 4px rgba(212,175,127,0.12)',
+        }}
+      >
+        {/* Sheen sweep across the face */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: '4%',
+            left: '8%',
+            width: '52%',
+            height: '30%',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.10)',
+            filter: 'blur(10px)',
+            transform: 'rotate(-25deg)',
+          }}
+        />
+        {/* Avanor monogram */}
+        <svg viewBox="0 0 100 100" className="relative w-[58%] h-[58%]">
+          <defs>
+            <linearGradient id="coinGold" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#FFF6E0" />
+              <stop offset="50%" stopColor="#D4AF7F" />
+              <stop offset="100%" stopColor="#8B6914" />
+            </linearGradient>
+            <linearGradient id="coinArrow" x1="0" y1="100" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#D4AF7F" />
+              <stop offset="100%" stopColor="#FFF6E0" />
+            </linearGradient>
+          </defs>
+          <path
+            fill="url(#coinGold)"
+            d="M50 11 L21 89 L32 89 L41 65 L59 65 L68 89 L79 89 Z M44.5 55 L50 39.5 L55.5 55 Z"
+          />
+          <path
+            fill="url(#coinArrow)"
+            d="M37 70 L52 70 L52 58 L60 58 L46 42 L32 58 L40 58 Z"
+            transform="rotate(45 46 58)"
+          />
+        </svg>
+      </div>
+      {/* Reeded edge ridges around the bezel */}
       <div
         className="absolute inset-0 rounded-full pointer-events-none"
         style={{
-          background: 'repeating-conic-gradient(rgba(91,67,10,0.16) 0deg 1.2deg, transparent 1.2deg 4.8deg)',
+          background: 'repeating-conic-gradient(rgba(91,67,10,0.25) 0deg 1deg, transparent 1deg 4deg)',
           mixBlendMode: 'multiply',
-        }}
-      />
-      {/* Inner embossed ring */}
-      <div
-        className="absolute rounded-full pointer-events-none"
-        style={{
-          inset: 10,
-          border: '1.5px solid rgba(139,105,20,0.45)',
-          boxShadow: 'inset 0 1px 5px rgba(255,255,255,0.55), inset 0 -2px 6px rgba(0,0,0,0.18)',
-        }}
-      />
-      {/* Specular highlight */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: '6%',
-          left: '12%',
-          width: '46%',
-          height: '26%',
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.65)',
-          filter: 'blur(8px)',
-          transform: 'rotate(-25deg)',
-        }}
-      />
-      {/* Lower rim shadow for roundness */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: '4%',
-          left: '18%',
-          width: '64%',
-          height: '20%',
-          borderRadius: '50%',
-          background: 'rgba(91,67,10,0.35)',
-          filter: 'blur(10px)',
         }}
       />
     </div>
@@ -203,7 +214,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
               }
               whileHover={phase === 'idle' ? { scale: 1.04 } : undefined}
               whileTap={phase === 'idle' ? { scale: 0.97 } : undefined}
-              className="relative w-36 h-36 rounded-full"
+              className="relative w-40 h-40 rounded-full"
               style={{
                 transformStyle: 'preserve-3d',
                 cursor: phase === 'idle' ? 'pointer' : 'default',
@@ -219,27 +230,28 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                 }}
               />
               <CoinDisc />
-              {/* Result overlay — fades in once the coin has landed */}
+              {/* Result overlay — fades in over the face once the coin has landed */}
               <AnimatePresence>
                 {phase === 'result' && outcome && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.7 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-1.5"
+                    className="absolute flex flex-col items-center justify-center gap-1.5 rounded-full"
+                    style={{ inset: 11, background: 'rgba(12,9,6,0.92)' }}
                   >
                     {outcome.result === 'win' ? (
                       <>
-                        <span className="text-4xl font-black tracking-tight" style={{ color: '#3A2A0E', textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>2x</span>
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">DOUBLE</span>
+                        <span className="text-4xl font-black tracking-tight" style={{ color: '#F4E4C1', textShadow: '0 0 18px rgba(212,175,127,0.5)' }}>2x</span>
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/80">DOUBLE</span>
                       </>
                     ) : (
                       <>
-                        <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#3A2A0E" strokeWidth={2.5}>
+                        <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#D4AF7F" strokeWidth={2.5}>
                           <circle cx="12" cy="12" r="9" />
                           <path strokeLinecap="round" d="M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 1.1-.7 1.7-1.6 2.3-.9.6-1.4 1.1-1.4 2.2M12 17h.01" />
                         </svg>
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#3A2A0E]">NEXT TIME</span>
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/60">NEXT TIME</span>
                       </>
                     )}
                   </motion.div>
