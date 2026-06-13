@@ -16,72 +16,63 @@ const LANDING_DURATION = 1.4;
 
 function CoinDisc() {
   return (
-    <div className="absolute inset-0 rounded-full" style={{ backfaceVisibility: 'hidden' }}>
-      {/* Thick metallic bezel — gives the disc real edge thickness */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: 'linear-gradient(135deg, #FFF6E0 0%, #E8C97A 28%, #B8893F 52%, #8B6914 78%, #F4E4C1 100%)',
-          boxShadow:
-            'inset 0 3px 5px rgba(255,255,255,0.7), inset 0 -4px 8px rgba(0,0,0,0.55), 0 1px 1px rgba(255,255,255,0.25)',
-        }}
-      />
-      {/* Recessed face */}
-      <div
-        className="absolute rounded-full overflow-hidden flex items-center justify-center"
-        style={{
-          inset: 11,
-          background: 'linear-gradient(160deg, #1C1610 0%, #0C0906 100%)',
-          boxShadow: 'inset 0 3px 8px rgba(0,0,0,0.7), inset 0 -2px 4px rgba(212,175,127,0.12)',
-        }}
-      >
-        {/* Sheen sweep across the face */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            top: '4%',
-            left: '8%',
-            width: '52%',
-            height: '30%',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.10)',
-            filter: 'blur(10px)',
-            transform: 'rotate(-25deg)',
-          }}
-        />
-        {/* Avanor monogram */}
-        <svg viewBox="0 0 100 100" className="relative w-[58%] h-[58%]">
-          <defs>
-            <linearGradient id="coinGold" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FFF6E0" />
-              <stop offset="50%" stopColor="#D4AF7F" />
-              <stop offset="100%" stopColor="#8B6914" />
-            </linearGradient>
-            <linearGradient id="coinArrow" x1="0" y1="100" x2="100" y2="0" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#D4AF7F" />
-              <stop offset="100%" stopColor="#FFF6E0" />
-            </linearGradient>
-          </defs>
-          <path
-            fill="url(#coinGold)"
-            d="M50 11 L21 89 L32 89 L41 65 L59 65 L68 89 L79 89 Z M44.5 55 L50 39.5 L55.5 55 Z"
-          />
-          <path
-            fill="url(#coinArrow)"
-            d="M37 70 L52 70 L52 58 L60 58 L46 42 L32 58 L40 58 Z"
-            transform="rotate(45 46 58)"
-          />
-        </svg>
-      </div>
-      {/* Reeded edge ridges around the bezel */}
-      <div
-        className="absolute inset-0 rounded-full pointer-events-none"
-        style={{
-          background: 'repeating-conic-gradient(rgba(91,67,10,0.25) 0deg 1deg, transparent 1deg 4deg)',
-          mixBlendMode: 'multiply',
-        }}
-      />
-    </div>
+    <svg viewBox="0 0 200 200" className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+      <defs>
+        <radialGradient id="bezelGrad" cx="35%" cy="28%" r="80%">
+          <stop offset="0%" stopColor="#FFFBEF" />
+          <stop offset="28%" stopColor="#F4E4C1" />
+          <stop offset="58%" stopColor="#D4AF7F" />
+          <stop offset="100%" stopColor="#8B6914" />
+        </radialGradient>
+        <linearGradient id="rimStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF6E0" />
+          <stop offset="45%" stopColor="#C9A36A" />
+          <stop offset="100%" stopColor="#5C4410" />
+        </linearGradient>
+        <radialGradient id="faceGrad" cx="50%" cy="38%" r="75%">
+          <stop offset="0%" stopColor="#2A2118" />
+          <stop offset="65%" stopColor="#16120C" />
+          <stop offset="100%" stopColor="#0A0805" />
+        </radialGradient>
+        <linearGradient id="monoGold" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFF6E0" />
+          <stop offset="50%" stopColor="#D4AF7F" />
+          <stop offset="100%" stopColor="#8B6914" />
+        </linearGradient>
+        <linearGradient id="monoArrow" x1="0" y1="100" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#D4AF7F" />
+          <stop offset="100%" stopColor="#FFF6E0" />
+        </linearGradient>
+        <filter id="coinShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000000" floodOpacity="0.45" />
+        </filter>
+        <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" />
+        </filter>
+        <filter id="monoGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#D4AF7F" floodOpacity="0.45" />
+        </filter>
+      </defs>
+
+      {/* Outer metallic bezel — gives the coin its edge thickness */}
+      <circle cx="100" cy="100" r="96" fill="url(#bezelGrad)" filter="url(#coinShadow)" />
+      <circle cx="100" cy="100" r="96" fill="none" stroke="#6B4E10" strokeOpacity="0.5" strokeWidth="1.5" />
+
+      {/* Specular highlight sweeping the bezel */}
+      <ellipse cx="68" cy="52" rx="46" ry="24" fill="#FFFFFF" opacity="0.4" filter="url(#softBlur)" transform="rotate(-22 68 52)" />
+
+      {/* Recessed face with beveled inner rim */}
+      <circle cx="100" cy="100" r="80" fill="url(#faceGrad)" stroke="url(#rimStroke)" strokeWidth="5" />
+
+      {/* Subtle sheen on the face */}
+      <ellipse cx="78" cy="62" rx="40" ry="20" fill="#FFFFFF" opacity="0.06" filter="url(#softBlur)" transform="rotate(-22 78 62)" />
+
+      {/* Avanor monogram */}
+      <g transform="translate(100,100) scale(0.82) translate(-50,-50)" filter="url(#monoGlow)">
+        <path fill="url(#monoGold)" d="M50 11 L21 89 L32 89 L41 65 L59 65 L68 89 L79 89 Z M44.5 55 L50 39.5 L55.5 55 Z" />
+        <path fill="url(#monoArrow)" d="M37 70 L52 70 L52 58 L60 58 L46 42 L32 58 L40 58 Z" transform="rotate(45 46 58)" />
+      </g>
+    </svg>
   );
 }
 
@@ -225,7 +216,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
               <div
                 className="absolute inset-0 rounded-full pointer-events-none"
                 style={{
-                  transform: 'translateZ(-6px) scale(0.985)',
+                  transform: 'translateZ(-6px) scale(0.97)',
                   background: 'linear-gradient(180deg, #C99B5A 0%, #8B6914 45%, #5C4410 100%)',
                 }}
               />
@@ -238,7 +229,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute flex flex-col items-center justify-center gap-1.5 rounded-full"
-                    style={{ inset: 11, background: 'rgba(12,9,6,0.92)' }}
+                    style={{ inset: 16, background: 'rgba(12,9,6,0.94)' }}
                   >
                     {outcome.result === 'win' ? (
                       <>
