@@ -8,6 +8,7 @@ import walletRoutes from './routes/wallet';
 import yieldRoutes from './routes/yield';
 import flipRoutes from './routes/flip';
 import healthRoutes from './routes/health';
+import marketRoutes from './routes/market';
 import { authenticate, logAuthMode } from './lib/auth';
 
 // Error monitoring — no-op unless SENTRY_DSN is configured.
@@ -73,6 +74,7 @@ async function build() {
   await server.register(walletRoutes, { prefix: '/api/wallet' });
   await server.register(yieldRoutes, { prefix: '/api/yield' });
   await server.register(flipRoutes, { prefix: '/api/flip' });
+  await server.register(marketRoutes, { prefix: '/api/market' });
   await server.register(healthRoutes, { prefix: '/api' });
 
   server.setErrorHandler((err, _req, reply) => {

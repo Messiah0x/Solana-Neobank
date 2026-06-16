@@ -16,6 +16,7 @@ import { YieldCard } from '@/components/yield/YieldCard';
 import { BalanceHero } from '@/components/dashboard/BalanceHero';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { SolanaMarketCard } from '@/components/dashboard/SolanaMarketCard';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import {
   registerWallet,
@@ -307,6 +308,7 @@ export default function DashboardPage() {
                     isLoading={txLoading}
                     hasWallet={hasWallet}
                   />
+                  <SolanaMarketCard />
                 </div>
               </div>
             </div>
