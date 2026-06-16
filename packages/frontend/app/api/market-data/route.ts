@@ -61,7 +61,7 @@ async function fetchFromYahoo(): Promise<StockQuote[]> {
     return {
       symbol: sym,
       xSymbol: fb.xSymbol,
-      name: (q.shortName as string) || fb.name,
+      name: fb.name,
       price: (q.regularMarketPrice as number) || fb.price,
       marketCap: (q.marketCap as number) || fb.marketCap,
       change24h: (q.regularMarketChangePercent as number) ?? 0,

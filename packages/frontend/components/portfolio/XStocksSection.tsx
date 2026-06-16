@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useXStocks } from '@/lib/useXStocks';
 
@@ -31,9 +32,42 @@ const TICKER_COLORS: Record<string, string> = {
   MSTR:  '#f97316',
 };
 
+const LOGO_DOMAINS: Record<string, string> = {
+  NVDA:  'nvidia.com',
+  AAPL:  'apple.com',
+  MSFT:  'microsoft.com',
+  AMZN:  'amazon.com',
+  GOOGL: 'abc.xyz',
+  META:  'meta.com',
+  TSLA:  'tesla.com',
+  SPY:   'ssga.com',
+  COIN:  'coinbase.com',
+  MSTR:  'microstrategy.com',
+};
+
 function TickerBadge({ symbol }: { symbol: string }) {
+  const [failed, setFailed] = useState(false);
   const color = TICKER_COLORS[symbol] ?? '#D4AF7F';
+  const domain = LOGO_DOMAINS[symbol];
   const label = symbol.length > 4 ? symbol.slice(0, 4) : symbol;
+
+  if (domain && !failed) {
+    return (
+      <div
+        className="flex-shrink-0 w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center"
+        style={{ background: '#ffffff', padding: 4 }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`https://logo.clearbit.com/${domain}?size=36`}
+          alt={symbol}
+          className="w-full h-full object-contain"
+          onError={() => setFailed(true)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
