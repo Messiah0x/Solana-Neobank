@@ -23,6 +23,15 @@ const tabs = [
     ),
   },
   {
+    label: 'Stocks',
+    href: '/dashboard/stocks',
+    icon: (active: boolean) => (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l5-5.5 4 3L21 6m0 0h-5m5 0v5" />
+      </svg>
+    ),
+  },
+  {
     label: 'Card',
     href: '/dashboard/card',
     icon: (active: boolean) => (
@@ -69,19 +78,19 @@ export function MobileNav() {
       className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-2xl border-t border-white/[0.06]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center justify-around h-16 max-w-2xl mx-auto">
+      <div className="flex items-center justify-around h-16 max-w-2xl mx-auto px-1">
         {tabs.map((tab) => {
           const active = pathname === tab.href;
           return (
             <Link
               key={tab.label}
               href={tab.href}
-              className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${
+              className={`flex flex-col items-center gap-1 px-1.5 py-2 transition-colors ${
                 active ? 'text-accent' : 'text-white/30'
               }`}
             >
               {tab.icon(active)}
-              <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-accent' : 'text-white/30'}`}>
+              <span className={`text-[9px] font-semibold tracking-wide ${active ? 'text-accent' : 'text-white/30'}`}>
                 {tab.label}
               </span>
             </Link>

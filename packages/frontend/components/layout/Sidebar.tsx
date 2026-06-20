@@ -25,6 +25,15 @@ const nav = [
     ),
   },
   {
+    label: 'Stocks',
+    href: '/dashboard/stocks',
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l5-5.5 4 3L21 6m0 0h-5m5 0v5" />
+      </svg>
+    ),
+  },
+  {
     label: 'Card',
     href: '/dashboard/card',
     icon: (

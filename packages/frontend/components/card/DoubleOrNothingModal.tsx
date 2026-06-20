@@ -18,78 +18,58 @@ function CoinDisc() {
   return (
     <svg viewBox="0 0 200 200" className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
       <defs>
-        <radialGradient id="bezelGrad" cx="35%" cy="28%" r="80%">
+        <radialGradient id="bezelGrad" cx="35%" cy="26%" r="85%">
           <stop offset="0%" stopColor="#FFFBEF" />
-          <stop offset="28%" stopColor="#F4E4C1" />
-          <stop offset="58%" stopColor="#D4AF7F" />
-          <stop offset="100%" stopColor="#8B6914" />
+          <stop offset="30%" stopColor="#F0DFB8" />
+          <stop offset="62%" stopColor="#D4AF7F" />
+          <stop offset="100%" stopColor="#876311" />
         </radialGradient>
-        <linearGradient id="rimStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFF6E0" />
-          <stop offset="45%" stopColor="#C9A36A" />
-          <stop offset="100%" stopColor="#5C4410" />
-        </linearGradient>
-        <radialGradient id="faceGrad" cx="50%" cy="36%" r="78%">
-          <stop offset="0%" stopColor="#2E241A" />
-          <stop offset="60%" stopColor="#17120C" />
-          <stop offset="100%" stopColor="#080604" />
+        <radialGradient id="faceGrad" cx="50%" cy="32%" r="85%">
+          <stop offset="0%" stopColor="#221B12" />
+          <stop offset="65%" stopColor="#14100A" />
+          <stop offset="100%" stopColor="#0A0704" />
         </radialGradient>
-        <linearGradient id="monoGold" x1="50" y1="8" x2="50" y2="92" gradientUnits="userSpaceOnUse">
+        <linearGradient id="markGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFF6E0" />
-          <stop offset="45%" stopColor="#E7C994" />
-          <stop offset="100%" stopColor="#9B7A33" />
-        </linearGradient>
-        <linearGradient id="monoArrow" x1="38" y1="60" x2="62" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#D4AF7F" />
-          <stop offset="100%" stopColor="#FFFBEF" />
+          <stop offset="50%" stopColor="#E9CC97" />
+          <stop offset="100%" stopColor="#A9842F" />
         </linearGradient>
         <filter id="coinShadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#000000" floodOpacity="0.5" />
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000000" floodOpacity="0.45" />
         </filter>
         <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="6" />
+          <feGaussianBlur stdDeviation="7" />
         </filter>
-        <filter id="monoGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#D4AF7F" floodOpacity="0.55" />
+        <filter id="markGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#D4AF7F" floodOpacity="0.45" />
         </filter>
       </defs>
 
-      {/* Outer rim contrast against background */}
-      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#000000" strokeOpacity="0.5" strokeWidth="1.5" />
+      {/* Outer contrast ring against the page background */}
+      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#000000" strokeOpacity="0.45" strokeWidth="1.5" />
 
-      {/* Outer metallic bezel — gives the coin its edge thickness */}
+      {/* Bezel — the coin's metallic edge */}
       <circle cx="100" cy="100" r="96" fill="url(#bezelGrad)" filter="url(#coinShadow)" />
+      <circle cx="100" cy="100" r="96" fill="none" stroke="#FFFBEF" strokeOpacity="0.5" strokeWidth="1.5" />
 
-      {/* Reeded edge */}
-      <circle cx="100" cy="100" r="91" fill="none" stroke="#5C4410" strokeOpacity="0.55" strokeWidth="5" strokeDasharray="2.6 2.2" />
-      <circle cx="100" cy="100" r="91" fill="none" stroke="#FFF6E0" strokeOpacity="0.35" strokeWidth="1" strokeDasharray="2.6 2.2" strokeDashoffset="1.3" />
+      {/* Thin reeded edge, subtle rather than busy */}
+      <circle cx="100" cy="100" r="92" fill="none" stroke="#5C4410" strokeOpacity="0.4" strokeWidth="3" strokeDasharray="1.6 3.4" />
 
-      {/* Bezel rim highlight + lowlight */}
-      <circle cx="100" cy="100" r="96" fill="none" stroke="#FFFBEF" strokeOpacity="0.55" strokeWidth="1.5" />
-      <circle cx="100" cy="100" r="83.5" fill="none" stroke="#3A2A0E" strokeOpacity="0.65" strokeWidth="2" />
+      {/* Recessed face */}
+      <circle cx="100" cy="100" r="79" fill="url(#faceGrad)" stroke="#5C4410" strokeOpacity="0.5" strokeWidth="2" />
+      <circle cx="100" cy="100" r="79" fill="none" stroke="#FFF6E0" strokeOpacity="0.12" strokeWidth="1" />
 
-      {/* Specular highlight sweeping the bezel */}
-      <ellipse cx="68" cy="50" rx="48" ry="26" fill="#FFFFFF" opacity="0.35" filter="url(#softBlur)" transform="rotate(-22 68 50)" />
+      {/* Single soft specular sweep, top-left */}
+      <ellipse cx="66" cy="48" rx="50" ry="28" fill="#FFFFFF" opacity="0.3" filter="url(#softBlur)" transform="rotate(-24 66 48)" />
 
-      {/* Recessed face with beveled inner rim */}
-      <circle cx="100" cy="100" r="80" fill="url(#faceGrad)" stroke="url(#rimStroke)" strokeWidth="5" />
-
-      {/* Engraved concentric rings */}
-      <circle cx="100" cy="100" r="73" fill="none" stroke="#D4AF7F" strokeOpacity="0.16" strokeWidth="1" />
-      <circle cx="100" cy="100" r="69.5" fill="none" stroke="#000000" strokeOpacity="0.35" strokeWidth="1" />
-
-      {/* Subtle sheen on the face */}
-      <ellipse cx="76" cy="58" rx="42" ry="22" fill="#FFFFFF" opacity="0.05" filter="url(#softBlur)" transform="rotate(-22 76 58)" />
-
-      {/* Avanor monogram: "A" with an ascending-arrow counter */}
-      <g filter="url(#monoGlow)">
+      {/* Avanor mark, true to the brand wordmark glyph */}
+      <g filter="url(#markGlow)" transform="translate(100 102) scale(0.78) translate(-37.5 -50)">
         <path
-          fill="url(#monoGold)"
+          fill="url(#markGrad)"
           fillRule="evenodd"
-          d="M100 28 L138 150 L120 150 L110 118 L90 118 L80 150 L62 150 Z
-             M100 58 L92 92 L108 92 Z"
+          clipRule="evenodd"
+          d="M37.5 2 L0 98 L14 98 L37.5 22 L61 98 L75 98 L37.5 2 Z M37.5 62 L28 98 L47 98 Z"
         />
-        <path fill="url(#monoArrow)" d="M94 88 L106 88 L106 78 L114 78 L100 60 L86 78 L94 78 Z" />
       </g>
     </svg>
   );

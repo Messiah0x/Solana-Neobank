@@ -7,7 +7,6 @@ import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { XStocksSection } from '@/components/portfolio/XStocksSection';
 import { fetchMainnetBalancesFromChain } from '@/lib/chain';
 import { useSolPrice } from '@/lib/useSolPrice';
 import { fmtUsd, shortAddr } from '@/lib/format';
@@ -248,9 +247,6 @@ export default function PortfolioPage() {
                 )}
               </div>
             </motion.div>
-
-            {/* xStocks */}
-            <XStocksSection />
 
             {/* Add a wallet */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.3 }}>
