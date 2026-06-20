@@ -7,6 +7,7 @@ import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { NetWorthSection } from '@/components/portfolio/NetWorthSection';
 import { fetchMainnetBalancesFromChain } from '@/lib/chain';
 import { useSolPrice } from '@/lib/useSolPrice';
 import { fmtUsd, shortAddr } from '@/lib/format';
@@ -142,36 +143,8 @@ export default function PortfolioPage() {
               <h1 className="text-2xl font-bold text-ivory">Portfolio</h1>
             </div>
 
-            {/* Total net worth hero */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="rounded-3xl p-6 relative overflow-hidden theme-invert"
-              style={{
-                background: 'var(--gradient-card-dark)',
-                border: '1px solid rgba(212,175,127,0.18)',
-              }}
-            >
-              <div
-                className="absolute top-0 right-0 w-64 h-64 pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(212,175,127,0.12) 0%, transparent 65%)', transform: 'translate(25%, -25%)' }}
-              />
-              <div className="relative">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40 mb-2">
-                  Total across {trackedWallets.length} wallet{trackedWallets.length === 1 ? '' : 's'}
-                </p>
-                <p className="text-4xl font-bold font-mono text-white tabular-nums">
-                  {loading && balances.length === 0 ? '—' : fmtUsd(totalUsd)}
-                </p>
-                <div className="flex items-center gap-4 mt-3 text-xs text-white/40 font-mono">
-                  <span>{totalSol.toFixed(3)} SOL</span>
-                  <span className="text-white/15">·</span>
-                  <span>{totalUsdc.toFixed(2)} USDC</span>
-                  {loading && <span className="text-accent/60 ml-auto">Refreshing…</span>}
-                </div>
-              </div>
-            </motion.div>
+            {/* Net worth + asset calculator */}
+            <NetWorthSection cryptoTotal={totalUsd} cryptoLoading={loading && balances.length === 0} />
 
             {/* Tracked wallets */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.3 }}>
