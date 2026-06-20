@@ -6,14 +6,9 @@ import { AvanorLogo } from '@/components/brand/AvanorLogo';
 import { getPrivyUserInfo } from '@/lib/privy-utils';
 
 export function Header() {
-  const { user, logout } = usePrivy();
+  const { user } = usePrivy();
   const router = useRouter();
   const { initials } = getPrivyUserInfo(user ?? null);
-
-  async function handleSignOut() {
-    await logout();
-    router.push('/auth/signin');
-  }
 
   return (
     <header
@@ -29,10 +24,10 @@ export function Header() {
       <div className="flex items-center gap-3">
         <span className="w-2 h-2 rounded-full bg-success animate-pulse lg:hidden" />
         <button
-          onClick={handleSignOut}
+          onClick={() => router.push('/dashboard/settings')}
           className="w-8 h-8 rounded-full bg-accent-muted border border-accent-border flex items-center justify-center hover:bg-accent/20 transition-colors"
-          title="Sign out"
-          aria-label="Sign out"
+          title="Settings"
+          aria-label="Settings"
         >
           <span className="font-heading text-accent text-xs font-bold">{initials}</span>
         </button>

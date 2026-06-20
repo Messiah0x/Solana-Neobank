@@ -134,13 +134,13 @@ export function XStocksSection() {
         <div className="flex items-center gap-3 px-4 py-2 border-b border-white/[0.04]">
           <div className="w-9 flex-shrink-0" />
           <p className="flex-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/20">Asset</p>
-          <div className="text-right w-28 flex-shrink-0">
+          <div className="text-right w-28 flex-shrink-0 hidden sm:block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/20">Mkt Cap</span>
           </div>
           <div className="text-right w-20 flex-shrink-0">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/20">Price</span>
           </div>
-          <div className="text-right w-14 flex-shrink-0">
+          <div className="text-right w-14 flex-shrink-0 hidden sm:block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/20">Balance</span>
           </div>
         </div>
@@ -179,7 +179,7 @@ export function XStocksSection() {
                   </div>
                 </div>
 
-                <div className="text-right w-28 flex-shrink-0">
+                <div className="text-right w-28 flex-shrink-0 hidden sm:block">
                   <p className="text-xs font-mono text-white/50">{fmtMarketCap(stock.marketCap)}</p>
                 </div>
 
@@ -187,7 +187,7 @@ export function XStocksSection() {
                   <p className="text-sm font-bold font-mono text-white/80">{fmtPrice(stock.price)}</p>
                 </div>
 
-                <div className="text-right w-14 flex-shrink-0">
+                <div className="text-right w-14 flex-shrink-0 hidden sm:block">
                   <p className="text-xs font-mono text-white/25">$0.00</p>
                 </div>
               </motion.div>
