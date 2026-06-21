@@ -10,6 +10,8 @@ interface DoubleOrNothingModalProps {
   executeFlip: () => Promise<FlipResult>;
   onClose: () => void;
   onSettled: (result: FlipResult) => void;
+  /** 'transaction' frames the flip as undoing/doubling a specific past payment. */
+  mode?: 'wager' | 'transaction';
 }
 
 const LANDING_DURATION = 1.4;
@@ -77,7 +79,7 @@ function CoinDisc() {
 
 type Phase = 'idle' | 'flipping' | 'result' | 'error';
 
-export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, onSettled }: DoubleOrNothingModalProps) {
+export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, onSettled, mode = 'wager' }: DoubleOrNothingModalProps) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [outcome, setOutcome] = useState<FlipResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,17 +156,21 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
           }}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent/70 mb-1">
-            Double or Nothing
+            {mode === 'transaction' ? 'Flip This Payment' : 'Double or Nothing'}
           </p>
           <h2 className="text-xl font-bold text-ivory mb-1">
-            {fmt(amount)} on the line
+            {mode === 'transaction' ? `Get it free, or pay double` : `${fmt(amount)} on the line`}
           </h2>
           <p className="text-xs text-white/35 mb-6 leading-relaxed">
-            {phase === 'idle' &&
+            {phase === 'idle' && mode === 'transaction' &&
+              `You'll sign a real transfer of ${fmt(amount)} to the house. Heads: you're fully refunded — this one's free. Tails: it's gone, and you've now paid ${fmt(amount * 2)} for it.`}
+            {phase === 'idle' && mode === 'wager' &&
               `Flip the coin to wager ${fmt(amount)}. You'll sign a real transfer to the house — call it right and ${fmt(amount * 2)} lands straight back in your wallet.`}
             {phase === 'flipping' && 'Approve the transaction in your wallet, then hold tight — the coin is in the air…'}
-            {phase === 'result' && outcome?.result === 'win' && `Heads up! ${fmt(amount * 2)} just landed in your wallet.`}
-            {phase === 'result' && outcome?.result === 'lose' && "So close — the house takes this round. Run it again?"}
+            {phase === 'result' && outcome?.result === 'win' && mode === 'transaction' && `Heads! ${fmt(amount)} just landed back in your wallet — this one's free.`}
+            {phase === 'result' && outcome?.result === 'win' && mode === 'wager' && `Heads up! ${fmt(amount * 2)} just landed in your wallet.`}
+            {phase === 'result' && outcome?.result === 'lose' && mode === 'transaction' && `Tails — that payment just doubled to ${fmt(amount * 2)} total.`}
+            {phase === 'result' && outcome?.result === 'lose' && mode === 'wager' && "So close — the house takes this round. Run it again?"}
             {phase === 'error' && (error ?? 'Something went wrong')}
           </p>
 
@@ -232,8 +238,12 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                   >
                     {outcome.result === 'win' ? (
                       <>
-                        <span className="text-4xl font-black tracking-tight" style={{ color: '#F4E4C1', textShadow: '0 0 18px rgba(212,175,127,0.5)' }}>2x</span>
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/80">DOUBLE</span>
+                        <span className="text-4xl font-black tracking-tight" style={{ color: '#F4E4C1', textShadow: '0 0 18px rgba(212,175,127,0.5)' }}>
+                          {mode === 'transaction' ? 'FREE' : '2x'}
+                        </span>
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/80">
+                          {mode === 'transaction' ? 'REFUNDED' : 'DOUBLE'}
+                        </span>
                       </>
                     ) : (
                       <>
@@ -241,7 +251,9 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                           <circle cx="12" cy="12" r="9" />
                           <path strokeLinecap="round" d="M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 1.1-.7 1.7-1.6 2.3-.9.6-1.4 1.1-1.4 2.2M12 17h.01" />
                         </svg>
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/60">NEXT TIME</span>
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/60">
+                          {mode === 'transaction' ? 'DOUBLED' : 'NEXT TIME'}
+                        </span>
                       </>
                     )}
                   </motion.div>
@@ -265,7 +277,9 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                 }}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 mb-1">
-                  {outcome.result === 'win' ? 'You called it' : 'Result'}
+                  {mode === 'transaction'
+                    ? outcome.result === 'win' ? 'Refunded' : 'Charged double'
+                    : outcome.result === 'win' ? 'You called it' : 'Result'}
                 </p>
                 <p className={`text-2xl font-bold font-mono ${outcome.result === 'win' ? 'text-green-400' : 'text-amber-400/80'}`}>
                   {outcome.result === 'win' ? '+' : '-'}{fmt(amount)}

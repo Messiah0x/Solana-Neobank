@@ -8,8 +8,10 @@ import useSWR from 'swr';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { getWalletTransactions, getWallet } from '@/lib/api';
+import { DoubleOrNothingModal } from '@/components/card/DoubleOrNothingModal';
+import { getWalletTransactions, getWallet, type FlipResult } from '@/lib/api';
 import { fetchTransactionsFromChain } from '@/lib/chain';
+import { useCoinFlip } from '@/lib/useCoinFlip';
 import { shortAddr, explorerTxUrl } from '@/lib/format';
 
 type Filter = 'all' | 'received' | 'sent' | 'yield';
@@ -90,36 +92,51 @@ function formatAmount(
   return `${sign}${formatted}${token ? ` ${token}` : ''}`;
 }
 
-function TxRow({ tx, index }: { tx: Transaction; index: number }) {
+function isFlippable(tx: Transaction): boolean {
+  return (
+    tx.type === 'sent' &&
+    tx.status === 'success' &&
+    !!tx.amount &&
+    tx.amount > 0 &&
+    (tx.token === 'SOL' || tx.token === 'USDC')
+  );
+}
+
+function TxRow({ tx, index, onFlip }: { tx: Transaction; index: number; onFlip: (tx: Transaction) => void }) {
   const short = shortAddr(tx.signature, 8);
   const counterpartyShort = tx.counterparty ? shortAddr(tx.counterparty, 6) : null;
   const explorerUrl = explorerTxUrl(tx.signature);
   const label = tx.type === 'received' ? 'Received' : tx.type === 'sent' ? 'Sent' : 'Transaction';
   const amountStr = formatAmount(tx.amount, tx.type, tx.token ?? null);
   const amountColor = tx.type === 'received' ? 'text-success' : tx.type === 'sent' ? 'text-error' : 'text-white/40';
+  const flippable = isFlippable(tx);
 
   return (
-    <motion.a
-      href={explorerUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+    <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.25 }}
-      className="flex items-center gap-3.5 py-3.5 border-b border-white/[0.04] last:border-0 group cursor-pointer hover:bg-white/[0.02] -mx-4 px-4 transition-colors"
+      className="flex items-center gap-3.5 py-3.5 border-b border-white/[0.04] last:border-0 group hover:bg-white/[0.02] -mx-4 px-4 transition-colors"
     >
-      <TxIcon type={tx.type} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5">
-          {label}
-          <svg className="w-3 h-3 text-white/20 group-hover:text-accent/50 transition-colors opacity-0 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-          </svg>
-        </p>
-        <p className="text-xs text-white/25 font-mono mt-0.5 truncate group-hover:text-white/40 transition-colors">
-          {counterpartyShort ?? short}
-        </p>
-      </div>
+      <a
+        href={explorerUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3.5 flex-1 min-w-0"
+      >
+        <TxIcon type={tx.type} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5">
+            {label}
+            <svg className="w-3 h-3 text-white/20 group-hover:text-accent/50 transition-colors opacity-0 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </p>
+          <p className="text-xs text-white/25 font-mono mt-0.5 truncate group-hover:text-white/40 transition-colors">
+            {counterpartyShort ?? short}
+          </p>
+        </div>
+      </a>
       <div className="text-right flex-shrink-0">
         {amountStr ? (
           <p className={`text-sm font-semibold tabular-nums ${amountColor}`}>{amountStr}</p>
@@ -133,8 +150,16 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
         {tx.timestamp && (
           <p className="text-[10px] text-white/20 mt-1.5 tabular-nums">{formatTime(tx.timestamp)}</p>
         )}
+        {flippable && (
+          <button
+            onClick={() => onFlip(tx)}
+            className="mt-1.5 text-[10px] font-bold text-accent/70 hover:text-accent uppercase tracking-wider transition-colors"
+          >
+            Flip it ↻
+          </button>
+        )}
       </div>
-    </motion.a>
+    </motion.div>
   );
 }
 
@@ -167,9 +192,11 @@ export default function ActivityPage() {
   
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
+  const [flipTx, setFlipTx] = useState<Transaction | null>(null);
 
   const { wallets } = useSolanaWallets();
   const privyAddress = wallets[0]?.address ?? null;
+  const { flip } = useCoinFlip(userId);
 
   const { data: wallet } = useSWR(
     userId ? `wallet-${userId}-${privyAddress ?? 'pending'}` : null,
@@ -322,7 +349,7 @@ export default function ActivityPage() {
                         </div>
                         <div className="px-4">
                           {txs.map((tx: Transaction, i: number) => (
-                            <TxRow key={tx.signature} tx={tx} index={i} />
+                            <TxRow key={tx.signature} tx={tx} index={i} onFlip={setFlipTx} />
                           ))}
                         </div>
                       </div>
@@ -347,6 +374,17 @@ export default function ActivityPage() {
         </main>
       </div>
       <MobileNav />
+
+      {flipTx && flipTx.amount && flipTx.token && (
+        <DoubleOrNothingModal
+          mode="transaction"
+          amount={flipTx.amount}
+          currency={flipTx.token}
+          executeFlip={() => flip(flipTx.token as 'SOL' | 'USDC', flipTx.amount as number)}
+          onClose={() => setFlipTx(null)}
+          onSettled={(_result: FlipResult) => setFlipTx(null)}
+        />
+      )}
     </div>
   );
 }
