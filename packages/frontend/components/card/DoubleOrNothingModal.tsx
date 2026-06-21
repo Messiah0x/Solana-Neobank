@@ -77,6 +77,57 @@ function CoinDisc() {
   );
 }
 
+// Tails face — same bezel, a cooler tone and an "X2" mark so the two
+// sides of the coin are visually distinct rather than identical.
+function CoinDiscTails() {
+  return (
+    <svg
+      viewBox="0 0 200 200"
+      className="absolute inset-0"
+      style={{ backfaceVisibility: 'hidden' }}
+    >
+      <defs>
+        <radialGradient id="bezelGradT" cx="35%" cy="26%" r="85%">
+          <stop offset="0%" stopColor="#F2F2F2" />
+          <stop offset="30%" stopColor="#CFCFCF" />
+          <stop offset="62%" stopColor="#9A9A9A" />
+          <stop offset="100%" stopColor="#5B5B5B" />
+        </radialGradient>
+        <radialGradient id="faceGradT" cx="50%" cy="32%" r="85%">
+          <stop offset="0%" stopColor="#1C1C1C" />
+          <stop offset="65%" stopColor="#121212" />
+          <stop offset="100%" stopColor="#0A0A0A" />
+        </radialGradient>
+        <linearGradient id="markGradT" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="50%" stopColor="#D8D8D8" />
+          <stop offset="100%" stopColor="#8A8A8A" />
+        </linearGradient>
+      </defs>
+
+      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#000000" strokeOpacity="0.45" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="96" fill="url(#bezelGradT)" />
+      <circle cx="100" cy="100" r="96" fill="none" stroke="#FFFFFF" strokeOpacity="0.5" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="92" fill="none" stroke="#3A3A3A" strokeOpacity="0.4" strokeWidth="3" strokeDasharray="1.6 3.4" />
+      <circle cx="100" cy="100" r="79" fill="url(#faceGradT)" stroke="#3A3A3A" strokeOpacity="0.5" strokeWidth="2" />
+      <circle cx="100" cy="100" r="79" fill="none" stroke="#FFFFFF" strokeOpacity="0.1" strokeWidth="1" />
+      <ellipse cx="66" cy="48" rx="50" ry="28" fill="#FFFFFF" opacity="0.2" transform="rotate(-24 66 48)" />
+
+      <text
+        x="100"
+        y="120"
+        textAnchor="middle"
+        fontSize="64"
+        fontWeight="900"
+        fill="url(#markGradT)"
+        fontFamily="sans-serif"
+      >
+        X2
+      </text>
+    </svg>
+  );
+}
+
 type Phase = 'idle' | 'flipping' | 'result' | 'error';
 
 export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, onSettled, mode = 'wager' }: DoubleOrNothingModalProps) {
@@ -109,10 +160,11 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
     try {
       const result = await executeFlip();
       setSpinFast(false);
-      // Always land face-up (a multiple of 360) after a couple of extra
-      // spins — the win/lose outcome is shown via the overlay, not the face.
+      // Land on the face that matches the actual outcome: heads (0°) for a
+      // win, tails (180°) for a loss — the coin itself must agree with the
+      // result, not just an overlay drawn on top of it.
       const base = Math.ceil(rotationRef.current / 360) * 360;
-      const target = base + 3 * 360;
+      const target = base + 3 * 360 + (result.result === 'lose' ? 180 : 0);
       rotationRef.current = target;
       setRotation(target);
       setTimeout(() => {
@@ -226,6 +278,9 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                 }}
               />
               <CoinDisc />
+              <div className="absolute inset-0" style={{ transform: 'rotateX(180deg)' }}>
+                <CoinDiscTails />
+              </div>
               {/* Result overlay — fades in over the face once the coin has landed */}
               <AnimatePresence>
                 {phase === 'result' && outcome && (
