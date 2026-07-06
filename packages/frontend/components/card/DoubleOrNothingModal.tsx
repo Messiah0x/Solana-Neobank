@@ -16,114 +16,138 @@ interface DoubleOrNothingModalProps {
 
 const LANDING_DURATION = 1.4;
 
+// Minute-tick ring drawn around the coin field — a small mint-style detail
+// that reads as engraved metal rather than a flat graphic.
+function TickRing({ color, opacity }: { color: string; opacity: number }) {
+  return (
+    <g stroke={color} strokeOpacity={opacity} strokeWidth="1.4" strokeLinecap="round">
+      {Array.from({ length: 24 }).map((_, i) => {
+        const a = (i / 24) * Math.PI * 2;
+        const x1 = 100 + Math.cos(a) * 79;
+        const y1 = 100 + Math.sin(a) * 79;
+        const x2 = 100 + Math.cos(a) * 73;
+        const y2 = 100 + Math.sin(a) * 73;
+        return <line key={i} x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} />;
+      })}
+    </g>
+  );
+}
+
 function CoinDisc() {
   return (
     <svg viewBox="0 0 200 200" className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
       <defs>
-        <radialGradient id="bezelGrad" cx="35%" cy="26%" r="85%">
-          <stop offset="0%" stopColor="#FFFBEF" />
-          <stop offset="30%" stopColor="#F0DFB8" />
-          <stop offset="62%" stopColor="#D4AF7F" />
-          <stop offset="100%" stopColor="#876311" />
+        <radialGradient id="hRim" cx="34%" cy="24%" r="90%">
+          <stop offset="0%" stopColor="#FFF7E4" />
+          <stop offset="26%" stopColor="#F4DFAF" />
+          <stop offset="55%" stopColor="#DCB878" />
+          <stop offset="78%" stopColor="#B8894A" />
+          <stop offset="100%" stopColor="#6E4E1E" />
         </radialGradient>
-        <radialGradient id="faceGrad" cx="50%" cy="32%" r="85%">
-          <stop offset="0%" stopColor="#221B12" />
-          <stop offset="65%" stopColor="#14100A" />
-          <stop offset="100%" stopColor="#0A0704" />
+        <radialGradient id="hField" cx="50%" cy="30%" r="85%">
+          <stop offset="0%" stopColor="#3A2E1C" />
+          <stop offset="55%" stopColor="#221A0F" />
+          <stop offset="100%" stopColor="#120C06" />
         </radialGradient>
-        <linearGradient id="markGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFF6E0" />
-          <stop offset="50%" stopColor="#E9CC97" />
-          <stop offset="100%" stopColor="#A9842F" />
+        <linearGradient id="hMark" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFF7E0" />
+          <stop offset="48%" stopColor="#F0D399" />
+          <stop offset="100%" stopColor="#B4863C" />
         </linearGradient>
-        <filter id="coinShadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000000" floodOpacity="0.45" />
+        <linearGradient id="hSheen" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+        <filter id="hGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="0" stdDeviation="2.4" floodColor="#F0D08A" floodOpacity="0.5" />
         </filter>
-        <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="7" />
-        </filter>
-        <filter id="markGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#D4AF7F" floodOpacity="0.45" />
-        </filter>
+        <filter id="hBlur"><feGaussianBlur stdDeviation="6" /></filter>
       </defs>
 
-      {/* Outer contrast ring against the page background */}
-      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#000000" strokeOpacity="0.45" strokeWidth="1.5" />
-
-      {/* Bezel — the coin's metallic edge */}
-      <circle cx="100" cy="100" r="96" fill="url(#bezelGrad)" filter="url(#coinShadow)" />
-      <circle cx="100" cy="100" r="96" fill="none" stroke="#FFFBEF" strokeOpacity="0.5" strokeWidth="1.5" />
-
-      {/* Thin reeded edge, subtle rather than busy */}
-      <circle cx="100" cy="100" r="92" fill="none" stroke="#5C4410" strokeOpacity="0.4" strokeWidth="3" strokeDasharray="1.6 3.4" />
-
-      {/* Recessed face */}
-      <circle cx="100" cy="100" r="79" fill="url(#faceGrad)" stroke="#5C4410" strokeOpacity="0.5" strokeWidth="2" />
-      <circle cx="100" cy="100" r="79" fill="none" stroke="#FFF6E0" strokeOpacity="0.12" strokeWidth="1" />
-
-      {/* Single soft specular sweep, top-left */}
-      <ellipse cx="66" cy="48" rx="50" ry="28" fill="#FFFFFF" opacity="0.3" filter="url(#softBlur)" transform="rotate(-24 66 48)" />
-
+      <circle cx="100" cy="100" r="98" fill="none" stroke="#000000" strokeOpacity="0.5" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="96.5" fill="url(#hRim)" />
+      <circle cx="100" cy="100" r="96.5" fill="none" stroke="#FFF7E4" strokeOpacity="0.55" strokeWidth="1.2" />
+      {/* reeded edge */}
+      <circle cx="100" cy="100" r="90" fill="none" stroke="#5A3F17" strokeOpacity="0.45" strokeWidth="4" strokeDasharray="1.4 3.2" />
+      {/* inner bevel + field */}
+      <circle cx="100" cy="100" r="83" fill="url(#hField)" stroke="#5A3F17" strokeOpacity="0.6" strokeWidth="1.6" />
+      <circle cx="100" cy="100" r="83" fill="none" stroke="#FBE9C4" strokeOpacity="0.14" strokeWidth="1" />
+      {/* guilloché concentric detail */}
+      <circle cx="100" cy="100" r="76" fill="none" stroke="#D4AF7F" strokeOpacity="0.22" strokeWidth="1" strokeDasharray="0.6 3" />
+      <circle cx="100" cy="100" r="70" fill="none" stroke="#D4AF7F" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="0.6 4" />
+      <TickRing color="#E9CC97" opacity={0.3} />
       {/* Avanor mark, true to the brand wordmark glyph */}
-      <g filter="url(#markGlow)" transform="translate(100 102) scale(0.78) translate(-37.5 -50)">
+      <g filter="url(#hGlow)" transform="translate(100 104) scale(0.82) translate(-37.5 -50)">
         <path
-          fill="url(#markGrad)"
+          fill="url(#hMark)"
           fillRule="evenodd"
           clipRule="evenodd"
           d="M37.5 2 L0 98 L14 98 L37.5 22 L61 98 L75 98 L37.5 2 Z M37.5 62 L28 98 L47 98 Z"
         />
       </g>
+      {/* specular sweep */}
+      <ellipse cx="72" cy="46" rx="54" ry="30" fill="url(#hSheen)" filter="url(#hBlur)" transform="rotate(-22 72 46)" />
     </svg>
   );
 }
 
-// Tails face — same bezel, a cooler tone and an "X2" mark so the two
-// sides of the coin are visually distinct rather than identical.
+// Tails face — a cool platinum treatment with a 2× mark so the two sides
+// of the coin are unmistakably distinct as it lands.
 function CoinDiscTails() {
   return (
-    <svg
-      viewBox="0 0 200 200"
-      className="absolute inset-0"
-      style={{ backfaceVisibility: 'hidden' }}
-    >
+    <svg viewBox="0 0 200 200" className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
       <defs>
-        <radialGradient id="bezelGradT" cx="35%" cy="26%" r="85%">
-          <stop offset="0%" stopColor="#F2F2F2" />
-          <stop offset="30%" stopColor="#CFCFCF" />
-          <stop offset="62%" stopColor="#9A9A9A" />
-          <stop offset="100%" stopColor="#5B5B5B" />
+        <radialGradient id="tRim" cx="34%" cy="24%" r="90%">
+          <stop offset="0%" stopColor="#FBFCFF" />
+          <stop offset="28%" stopColor="#D7DEE8" />
+          <stop offset="58%" stopColor="#A9B4C2" />
+          <stop offset="80%" stopColor="#7C8797" />
+          <stop offset="100%" stopColor="#454E5C" />
         </radialGradient>
-        <radialGradient id="faceGradT" cx="50%" cy="32%" r="85%">
-          <stop offset="0%" stopColor="#1C1C1C" />
-          <stop offset="65%" stopColor="#121212" />
-          <stop offset="100%" stopColor="#0A0A0A" />
+        <radialGradient id="tField" cx="50%" cy="30%" r="85%">
+          <stop offset="0%" stopColor="#26303C" />
+          <stop offset="55%" stopColor="#171E27" />
+          <stop offset="100%" stopColor="#0C1016" />
         </radialGradient>
-        <linearGradient id="markGradT" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="tMark" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="50%" stopColor="#D8D8D8" />
-          <stop offset="100%" stopColor="#8A8A8A" />
+          <stop offset="50%" stopColor="#DCE4EE" />
+          <stop offset="100%" stopColor="#94A0AF" />
         </linearGradient>
+        <linearGradient id="tSheen" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.5" />
+          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+        <filter id="tGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#BFD0E4" floodOpacity="0.5" />
+        </filter>
+        <filter id="tBlur"><feGaussianBlur stdDeviation="6" /></filter>
       </defs>
 
-      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#000000" strokeOpacity="0.45" strokeWidth="1.5" />
-      <circle cx="100" cy="100" r="96" fill="url(#bezelGradT)" />
-      <circle cx="100" cy="100" r="96" fill="none" stroke="#FFFFFF" strokeOpacity="0.5" strokeWidth="1.5" />
-      <circle cx="100" cy="100" r="92" fill="none" stroke="#3A3A3A" strokeOpacity="0.4" strokeWidth="3" strokeDasharray="1.6 3.4" />
-      <circle cx="100" cy="100" r="79" fill="url(#faceGradT)" stroke="#3A3A3A" strokeOpacity="0.5" strokeWidth="2" />
-      <circle cx="100" cy="100" r="79" fill="none" stroke="#FFFFFF" strokeOpacity="0.1" strokeWidth="1" />
-      <ellipse cx="66" cy="48" rx="50" ry="28" fill="#FFFFFF" opacity="0.2" transform="rotate(-24 66 48)" />
-
-      <text
-        x="100"
-        y="120"
-        textAnchor="middle"
-        fontSize="64"
-        fontWeight="900"
-        fill="url(#markGradT)"
-        fontFamily="sans-serif"
-      >
-        X2
-      </text>
+      <circle cx="100" cy="100" r="98" fill="none" stroke="#000000" strokeOpacity="0.5" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="96.5" fill="url(#tRim)" />
+      <circle cx="100" cy="100" r="96.5" fill="none" stroke="#FBFCFF" strokeOpacity="0.55" strokeWidth="1.2" />
+      <circle cx="100" cy="100" r="90" fill="none" stroke="#37414F" strokeOpacity="0.45" strokeWidth="4" strokeDasharray="1.4 3.2" />
+      <circle cx="100" cy="100" r="83" fill="url(#tField)" stroke="#37414F" strokeOpacity="0.6" strokeWidth="1.6" />
+      <circle cx="100" cy="100" r="83" fill="none" stroke="#E8EEF6" strokeOpacity="0.14" strokeWidth="1" />
+      <circle cx="100" cy="100" r="76" fill="none" stroke="#AEBBCB" strokeOpacity="0.22" strokeWidth="1" strokeDasharray="0.6 3" />
+      <circle cx="100" cy="100" r="70" fill="none" stroke="#AEBBCB" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="0.6 4" />
+      <TickRing color="#DCE4EE" opacity={0.3} />
+      <g filter="url(#tGlow)">
+        <text
+          x="100"
+          y="100"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontFamily="Georgia, 'Times New Roman', serif"
+          fontWeight="700"
+          fontSize="66"
+          fill="url(#tMark)"
+        >
+          2×
+        </text>
+      </g>
+      <ellipse cx="72" cy="46" rx="54" ry="30" fill="url(#tSheen)" filter="url(#tBlur)" transform="rotate(-22 72 46)" />
     </svg>
   );
 }
