@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import type { FlipCurrency, FlipResult } from '@/lib/api';
 
 interface DoubleOrNothingModalProps {
@@ -14,70 +14,81 @@ interface DoubleOrNothingModalProps {
   mode?: 'wager' | 'transaction';
 }
 
-const LANDING_DURATION = 1.4;
-
-// Minute-tick ring drawn around the coin field — a small mint-style detail
-// that reads as engraved metal rather than a flat graphic.
+// Minute-tick ring around the coin field — a mint-style detail that reads as
+// engraved metal rather than flat graphic.
 function TickRing({ color, opacity }: { color: string; opacity: number }) {
   return (
     <g stroke={color} strokeOpacity={opacity} strokeWidth="1.4" strokeLinecap="round">
-      {Array.from({ length: 24 }).map((_, i) => {
-        const a = (i / 24) * Math.PI * 2;
-        const x1 = 100 + Math.cos(a) * 79;
-        const y1 = 100 + Math.sin(a) * 79;
-        const x2 = 100 + Math.cos(a) * 73;
-        const y2 = 100 + Math.sin(a) * 73;
-        return <line key={i} x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} />;
+      {Array.from({ length: 36 }).map((_, i) => {
+        const a = (i / 36) * Math.PI * 2;
+        const long = i % 3 === 0;
+        const r1 = 79;
+        const r2 = long ? 71 : 74.5;
+        return (
+          <line
+            key={i}
+            x1={(100 + Math.cos(a) * r1).toFixed(1)}
+            y1={(100 + Math.sin(a) * r1).toFixed(1)}
+            x2={(100 + Math.cos(a) * r2).toFixed(1)}
+            y2={(100 + Math.sin(a) * r2).toFixed(1)}
+            strokeOpacity={long ? opacity : opacity * 0.55}
+          />
+        );
       })}
     </g>
   );
 }
 
-function CoinDisc() {
+// Heads — a warm champagne-gold medallion carrying the Avanor monogram.
+function HeadsFace() {
   return (
-    <svg viewBox="0 0 200 200" className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+    <svg viewBox="0 0 200 200" className="w-full h-full block">
       <defs>
-        <radialGradient id="hRim" cx="34%" cy="24%" r="90%">
-          <stop offset="0%" stopColor="#FFF7E4" />
-          <stop offset="26%" stopColor="#F4DFAF" />
-          <stop offset="55%" stopColor="#DCB878" />
-          <stop offset="78%" stopColor="#B8894A" />
-          <stop offset="100%" stopColor="#6E4E1E" />
+        <radialGradient id="hRim" cx="34%" cy="22%" r="92%">
+          <stop offset="0%" stopColor="#FFF8E7" />
+          <stop offset="24%" stopColor="#F3DCA6" />
+          <stop offset="52%" stopColor="#D9B577" />
+          <stop offset="76%" stopColor="#AE7F3E" />
+          <stop offset="100%" stopColor="#5E4118" />
         </radialGradient>
-        <radialGradient id="hField" cx="50%" cy="30%" r="85%">
-          <stop offset="0%" stopColor="#3A2E1C" />
-          <stop offset="55%" stopColor="#221A0F" />
-          <stop offset="100%" stopColor="#120C06" />
+        <radialGradient id="hField" cx="50%" cy="28%" r="88%">
+          <stop offset="0%" stopColor="#43341F" />
+          <stop offset="52%" stopColor="#241B0F" />
+          <stop offset="100%" stopColor="#0F0A05" />
         </radialGradient>
         <linearGradient id="hMark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFF7E0" />
-          <stop offset="48%" stopColor="#F0D399" />
-          <stop offset="100%" stopColor="#B4863C" />
+          <stop offset="0%" stopColor="#FFFBEE" />
+          <stop offset="46%" stopColor="#F2D79E" />
+          <stop offset="100%" stopColor="#B0823A" />
         </linearGradient>
         <linearGradient id="hSheen" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.6" />
           <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
         </linearGradient>
+        <radialGradient id="hOcc" cx="50%" cy="88%" r="55%">
+          <stop offset="0%" stopColor="#000000" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        </radialGradient>
         <filter id="hGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.4" floodColor="#F0D08A" floodOpacity="0.5" />
+          <feDropShadow dx="0" dy="0" stdDeviation="2.4" floodColor="#F2D48C" floodOpacity="0.55" />
         </filter>
         <filter id="hBlur"><feGaussianBlur stdDeviation="6" /></filter>
       </defs>
 
-      <circle cx="100" cy="100" r="98" fill="none" stroke="#000000" strokeOpacity="0.5" strokeWidth="1.5" />
-      <circle cx="100" cy="100" r="96.5" fill="url(#hRim)" />
-      <circle cx="100" cy="100" r="96.5" fill="none" stroke="#FFF7E4" strokeOpacity="0.55" strokeWidth="1.2" />
+      <circle cx="100" cy="100" r="99" fill="none" stroke="#000000" strokeOpacity="0.55" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="97.5" fill="url(#hRim)" />
+      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#FFF8E7" strokeOpacity="0.6" strokeWidth="1.2" />
       {/* reeded edge */}
-      <circle cx="100" cy="100" r="90" fill="none" stroke="#5A3F17" strokeOpacity="0.45" strokeWidth="4" strokeDasharray="1.4 3.2" />
-      {/* inner bevel + field */}
-      <circle cx="100" cy="100" r="83" fill="url(#hField)" stroke="#5A3F17" strokeOpacity="0.6" strokeWidth="1.6" />
-      <circle cx="100" cy="100" r="83" fill="none" stroke="#FBE9C4" strokeOpacity="0.14" strokeWidth="1" />
-      {/* guilloché concentric detail */}
-      <circle cx="100" cy="100" r="76" fill="none" stroke="#D4AF7F" strokeOpacity="0.22" strokeWidth="1" strokeDasharray="0.6 3" />
-      <circle cx="100" cy="100" r="70" fill="none" stroke="#D4AF7F" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="0.6 4" />
-      <TickRing color="#E9CC97" opacity={0.3} />
-      {/* Avanor mark, true to the brand wordmark glyph */}
-      <g filter="url(#hGlow)" transform="translate(100 104) scale(0.82) translate(-37.5 -50)">
+      <circle cx="100" cy="100" r="90.5" fill="none" stroke="#5A3F17" strokeOpacity="0.5" strokeWidth="4" strokeDasharray="1.3 3" />
+      {/* recessed field */}
+      <circle cx="100" cy="100" r="83" fill="url(#hField)" stroke="#5A3F17" strokeOpacity="0.65" strokeWidth="1.6" />
+      <circle cx="100" cy="100" r="83" fill="url(#hOcc)" />
+      <circle cx="100" cy="100" r="83" fill="none" stroke="#FBE9C4" strokeOpacity="0.16" strokeWidth="1" />
+      {/* guilloché detail */}
+      <circle cx="100" cy="100" r="65" fill="none" stroke="#E4C588" strokeOpacity="0.16" strokeWidth="1" strokeDasharray="0.5 3.5" />
+      <TickRing color="#EBD09B" opacity={0.34} />
+      {/* Avanor monogram */}
+      <g filter="url(#hGlow)" transform="translate(100 105) scale(0.86) translate(-37.5 -50)">
         <path
           fill="url(#hMark)"
           fillRule="evenodd"
@@ -86,68 +97,72 @@ function CoinDisc() {
         />
       </g>
       {/* specular sweep */}
-      <ellipse cx="72" cy="46" rx="54" ry="30" fill="url(#hSheen)" filter="url(#hBlur)" transform="rotate(-22 72 46)" />
+      <ellipse cx="72" cy="44" rx="56" ry="30" fill="url(#hSheen)" filter="url(#hBlur)" transform="rotate(-22 72 44)" />
     </svg>
   );
 }
 
-// Tails face — a cool platinum treatment with a 2× mark so the two sides
-// of the coin are unmistakably distinct as it lands.
-function CoinDiscTails() {
+// Tails — a cool platinum medallion marked 2×.
+function TailsFace() {
   return (
-    <svg viewBox="0 0 200 200" className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+    <svg viewBox="0 0 200 200" className="w-full h-full block">
       <defs>
-        <radialGradient id="tRim" cx="34%" cy="24%" r="90%">
-          <stop offset="0%" stopColor="#FBFCFF" />
-          <stop offset="28%" stopColor="#D7DEE8" />
-          <stop offset="58%" stopColor="#A9B4C2" />
-          <stop offset="80%" stopColor="#7C8797" />
-          <stop offset="100%" stopColor="#454E5C" />
+        <radialGradient id="tRim" cx="34%" cy="22%" r="92%">
+          <stop offset="0%" stopColor="#FCFDFF" />
+          <stop offset="26%" stopColor="#DAE1EB" />
+          <stop offset="56%" stopColor="#AAB5C4" />
+          <stop offset="80%" stopColor="#78838F" />
+          <stop offset="100%" stopColor="#3D4653" />
         </radialGradient>
-        <radialGradient id="tField" cx="50%" cy="30%" r="85%">
-          <stop offset="0%" stopColor="#26303C" />
-          <stop offset="55%" stopColor="#171E27" />
-          <stop offset="100%" stopColor="#0C1016" />
+        <radialGradient id="tField" cx="50%" cy="28%" r="88%">
+          <stop offset="0%" stopColor="#2A3542" />
+          <stop offset="52%" stopColor="#19212B" />
+          <stop offset="100%" stopColor="#0A0E14" />
         </radialGradient>
         <linearGradient id="tMark" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="50%" stopColor="#DCE4EE" />
-          <stop offset="100%" stopColor="#94A0AF" />
+          <stop offset="50%" stopColor="#DDE4EE" />
+          <stop offset="100%" stopColor="#96A2B1" />
         </linearGradient>
         <linearGradient id="tSheen" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.5" />
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
           <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
         </linearGradient>
+        <radialGradient id="tOcc" cx="50%" cy="88%" r="55%">
+          <stop offset="0%" stopColor="#000000" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        </radialGradient>
         <filter id="tGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#BFD0E4" floodOpacity="0.5" />
+          <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#C3D2E6" floodOpacity="0.55" />
         </filter>
         <filter id="tBlur"><feGaussianBlur stdDeviation="6" /></filter>
       </defs>
 
-      <circle cx="100" cy="100" r="98" fill="none" stroke="#000000" strokeOpacity="0.5" strokeWidth="1.5" />
-      <circle cx="100" cy="100" r="96.5" fill="url(#tRim)" />
-      <circle cx="100" cy="100" r="96.5" fill="none" stroke="#FBFCFF" strokeOpacity="0.55" strokeWidth="1.2" />
-      <circle cx="100" cy="100" r="90" fill="none" stroke="#37414F" strokeOpacity="0.45" strokeWidth="4" strokeDasharray="1.4 3.2" />
-      <circle cx="100" cy="100" r="83" fill="url(#tField)" stroke="#37414F" strokeOpacity="0.6" strokeWidth="1.6" />
-      <circle cx="100" cy="100" r="83" fill="none" stroke="#E8EEF6" strokeOpacity="0.14" strokeWidth="1" />
-      <circle cx="100" cy="100" r="76" fill="none" stroke="#AEBBCB" strokeOpacity="0.22" strokeWidth="1" strokeDasharray="0.6 3" />
-      <circle cx="100" cy="100" r="70" fill="none" stroke="#AEBBCB" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="0.6 4" />
-      <TickRing color="#DCE4EE" opacity={0.3} />
+      <circle cx="100" cy="100" r="99" fill="none" stroke="#000000" strokeOpacity="0.55" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="97.5" fill="url(#tRim)" />
+      <circle cx="100" cy="100" r="97.5" fill="none" stroke="#FCFDFF" strokeOpacity="0.6" strokeWidth="1.2" />
+      <circle cx="100" cy="100" r="90.5" fill="none" stroke="#37414F" strokeOpacity="0.5" strokeWidth="4" strokeDasharray="1.3 3" />
+      <circle cx="100" cy="100" r="83" fill="url(#tField)" stroke="#37414F" strokeOpacity="0.65" strokeWidth="1.6" />
+      <circle cx="100" cy="100" r="83" fill="url(#tOcc)" />
+      <circle cx="100" cy="100" r="83" fill="none" stroke="#E8EEF6" strokeOpacity="0.16" strokeWidth="1" />
+      <circle cx="100" cy="100" r="65" fill="none" stroke="#B9C6D6" strokeOpacity="0.16" strokeWidth="1" strokeDasharray="0.5 3.5" />
+      <TickRing color="#D3DEEC" opacity={0.34} />
       <g filter="url(#tGlow)">
         <text
-          x="100"
-          y="100"
+          x="101"
+          y="102"
           textAnchor="middle"
           dominantBaseline="central"
-          fontFamily="Georgia, 'Times New Roman', serif"
-          fontWeight="700"
-          fontSize="66"
+          fontFamily="'Helvetica Neue', Arial, sans-serif"
+          fontWeight="800"
+          fontSize="60"
+          letterSpacing="-2"
           fill="url(#tMark)"
         >
           2×
         </text>
       </g>
-      <ellipse cx="72" cy="46" rx="54" ry="30" fill="url(#tSheen)" filter="url(#tBlur)" transform="rotate(-22 72 46)" />
+      <ellipse cx="72" cy="44" rx="56" ry="30" fill="url(#tSheen)" filter="url(#tBlur)" transform="rotate(-22 72 44)" />
     </svg>
   );
 }
@@ -158,45 +173,51 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
   const [phase, setPhase] = useState<Phase>('idle');
   const [outcome, setOutcome] = useState<FlipResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [rotation, setRotation] = useState(0);
-  const [spinFast, setSpinFast] = useState(false);
-  const rotationRef = useRef(0);
+  const [face, setFace] = useState<'heads' | 'tails'>('heads');
+  const coin = useAnimation();
+  const flippingRef = useRef(false);
 
   const symbol = currency === 'USDC' ? '$' : '';
   const suffix = currency === 'USDC' ? '' : ' SOL';
   const fmt = (n: number) => `${symbol}${n.toLocaleString('en-US', { maximumFractionDigits: 4 })}${suffix}`;
 
-  // Keep the coin spinning while the bet is being signed, confirmed
-  // on-chain, and resolved server-side — the duration is unknown.
-  useEffect(() => {
-    if (!spinFast) return;
-    const interval = setInterval(() => {
-      rotationRef.current += 360;
-      setRotation(rotationRef.current);
-    }, 450);
-    return () => clearInterval(interval);
-  }, [spinFast]);
+  const won = outcome?.result === 'win';
+
+  // A pure-2D flip: the coin squashes edge-on (scaleY → ~0), swaps face while
+  // it's invisibly thin, and expands again. No CSS 3D / backface-visibility,
+  // which iOS Safari fails to composite for inline SVG. Robust everywhere.
+  async function tumble() {
+    while (flippingRef.current) {
+      await coin.start({ scaleY: 0.08, transition: { duration: 0.13, ease: 'easeInOut' } });
+      if (!flippingRef.current) break;
+      setFace((f) => (f === 'heads' ? 'tails' : 'heads'));
+      await coin.start({ scaleY: 1, transition: { duration: 0.13, ease: 'easeInOut' } });
+    }
+  }
 
   async function startFlip() {
     if (phase !== 'idle') return;
     setPhase('flipping');
-    setSpinFast(true);
+    flippingRef.current = true;
+    const spin = tumble();
     try {
       const result = await executeFlip();
-      setSpinFast(false);
-      // Land on the face that matches the actual outcome: heads (0°) for a
-      // win, tails (180°) for a loss — the coin itself must agree with the
-      // result, not just an overlay drawn on top of it.
-      const base = Math.ceil(rotationRef.current / 360) * 360;
-      const target = base + 3 * 360 + (result.result === 'lose' ? 180 : 0);
-      rotationRef.current = target;
-      setRotation(target);
-      setTimeout(() => {
-        setOutcome(result);
-        setPhase('result');
-      }, LANDING_DURATION * 1000);
+      flippingRef.current = false;
+      await spin;
+      // Decisive landing on the face that matches the outcome, with an
+      // overshoot bounce for weight.
+      await coin.start({ scaleY: 0.08, transition: { duration: 0.12, ease: 'easeIn' } });
+      setFace(result.result === 'win' ? 'heads' : 'tails');
+      await coin.start({
+        scaleY: [0.08, 1.12, 0.95, 1],
+        transition: { duration: 0.52, times: [0, 0.55, 0.8, 1], ease: 'easeOut' },
+      });
+      setOutcome(result);
+      setPhase('result');
     } catch (e) {
-      setSpinFast(false);
+      flippingRef.current = false;
+      await spin.catch(() => {});
+      await coin.start({ scaleY: 1, transition: { duration: 0.15 } });
       setError(e instanceof Error ? e.message : 'Something went wrong');
       setPhase('error');
     }
@@ -215,7 +236,7 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(8,6,4,0.85)', backdropFilter: 'blur(8px)' }}
+        style={{ background: 'rgba(8,6,4,0.88)', backdropFilter: 'blur(10px)' }}
         onClick={() => dismissible && onClose()}
       >
         <motion.div
@@ -226,120 +247,105 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
           onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-sm rounded-3xl p-6 flex flex-col items-center text-center max-h-[90dvh] overflow-y-auto theme-invert"
           style={{
-            background: 'linear-gradient(160deg, #1C1610 0%, #100C08 100%)',
+            background: 'radial-gradient(120% 90% at 50% 0%, #241C13 0%, #16110B 46%, #0E0A06 100%)',
             border: '1px solid rgba(212,175,127,0.18)',
             boxShadow: '0 32px 64px rgba(0,0,0,0.6)',
           }}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent/70 mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent/70 mb-1.5">
             {mode === 'transaction' ? 'Flip This Payment' : 'Double or Nothing'}
           </p>
-          <h2 className="text-xl font-bold text-ivory mb-1">
-            {mode === 'transaction' ? `Get it free, or pay double` : `${fmt(amount)} on the line`}
+          <h2 className="text-[22px] leading-tight font-bold text-ivory mb-1.5">
+            {mode === 'transaction' ? 'Get it free, or pay double' : `${fmt(amount)} on the line`}
           </h2>
-          <p className="text-xs text-white/35 mb-6 leading-relaxed">
+          <p className="text-xs text-white/40 mb-6 leading-relaxed max-w-[19rem]">
             {phase === 'idle' && mode === 'transaction' &&
-              `You'll sign a real transfer of ${fmt(amount)} to the house. Heads: you're fully refunded — this one's free. Tails: it's gone, and you've now paid ${fmt(amount * 2)} for it.`}
+              `Sign a real ${fmt(amount)} transfer to the house. Heads, you're fully refunded — this one's free. Tails, it's gone and you've paid ${fmt(amount * 2)} in total.`}
             {phase === 'idle' && mode === 'wager' &&
-              `Flip the coin to wager ${fmt(amount)}. You'll sign a real transfer to the house — call it right and ${fmt(amount * 2)} lands straight back in your wallet.`}
-            {phase === 'flipping' && 'Approve the transaction in your wallet, then hold tight — the coin is in the air…'}
-            {phase === 'result' && outcome?.result === 'win' && mode === 'transaction' && `Heads! ${fmt(amount)} just landed back in your wallet — this one's free.`}
-            {phase === 'result' && outcome?.result === 'win' && mode === 'wager' && `Heads up! ${fmt(amount * 2)} just landed in your wallet.`}
-            {phase === 'result' && outcome?.result === 'lose' && mode === 'transaction' && `Tails — that payment just doubled to ${fmt(amount * 2)} total.`}
-            {phase === 'result' && outcome?.result === 'lose' && mode === 'wager' && "So close — the house takes this round. Run it again?"}
+              `Wager ${fmt(amount)} on a fair 50/50. Heads pays ${fmt(amount * 2)} straight back to your wallet. Tails, the house keeps it.`}
+            {phase === 'flipping' && 'Approve the transfer in your wallet — the coin is in the air…'}
+            {phase === 'result' && won && mode === 'transaction' && `Heads. ${fmt(amount)} is back in your wallet — this one's on the house.`}
+            {phase === 'result' && won && mode === 'wager' && `Heads. ${fmt(amount * 2)} just landed in your wallet.`}
+            {phase === 'result' && !won && mode === 'transaction' && `Tails. That payment just doubled to ${fmt(amount * 2)}.`}
+            {phase === 'result' && !won && mode === 'wager' && 'Tails. The house takes this one — run it back?'}
             {phase === 'error' && (error ?? 'Something went wrong')}
           </p>
 
-          <div style={{ perspective: 1000 }} className="mb-6 relative h-44 flex items-center justify-center">
-            {/* Soft ambient glow beneath the coin for depth */}
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-              style={{
-                width: 190,
-                height: 190,
-                background: 'radial-gradient(circle, rgba(212,175,127,0.35) 0%, rgba(212,175,127,0) 70%)',
-                filter: 'blur(4px)',
-              }}
-            />
-            {/* Cast shadow that contracts while the coin is airborne */}
+          {/* Coin stage */}
+          <div className="mb-5 relative h-48 w-48 flex items-center justify-center">
+            {/* Ambient base glow — tints to the outcome on result */}
             <motion.div
-              className="absolute left-1/2 bottom-1 -translate-x-1/2 rounded-full pointer-events-none"
-              style={{ width: 110, height: 16, background: 'radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 75%)' }}
-              animate={{ scaleX: spinFast ? [1, 0.55, 1] : 1, opacity: spinFast ? [0.6, 0.3, 0.6] : 0.6 }}
-              transition={spinFast ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
-            />
-            <motion.button
-              type="button"
-              onClick={startFlip}
-              disabled={phase !== 'idle'}
+              className="absolute rounded-full pointer-events-none"
+              style={{ width: 208, height: 208 }}
               animate={{
-                rotateX: rotation,
-                y: spinFast ? [0, -22, 0] : 0,
+                background:
+                  phase === 'result'
+                    ? won
+                      ? 'radial-gradient(circle, rgba(74,222,128,0.34) 0%, rgba(74,222,128,0) 66%)'
+                      : 'radial-gradient(circle, rgba(248,180,110,0.30) 0%, rgba(248,180,110,0) 66%)'
+                    : 'radial-gradient(circle, rgba(212,175,127,0.30) 0%, rgba(212,175,127,0) 68%)',
+                scale: phase === 'result' ? [0.7, 1.15, 1] : 1,
               }}
-              transition={
-                spinFast
-                  ? {
-                      rotateX: { duration: 0.45, ease: 'linear' },
-                      y: { duration: 0.45, repeat: Infinity, ease: 'easeInOut' },
-                    }
-                  : { duration: LANDING_DURATION, ease: [0.22, 0.68, 0, 1] }
-              }
-              whileHover={phase === 'idle' ? { scale: 1.04 } : undefined}
-              whileTap={phase === 'idle' ? { scale: 0.97 } : undefined}
-              className="relative w-40 h-40 rounded-full"
-              style={{
-                transformStyle: 'preserve-3d',
-                cursor: phase === 'idle' ? 'pointer' : 'default',
-                boxShadow: '0 18px 40px rgba(0,0,0,0.5)',
-              }}
-            >
-              {/* Coin edge — gives the disc visible thickness as it tilts */}
-              <div
-                className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  transform: 'translateZ(-6px) scale(0.97)',
-                  background: 'linear-gradient(180deg, #C99B5A 0%, #8B6914 45%, #5C4410 100%)',
-                }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            />
+
+            {/* Idle breathing halo to signal the coin is tappable */}
+            {phase === 'idle' && (
+              <motion.div
+                className="absolute rounded-full pointer-events-none"
+                style={{ width: 176, height: 176, border: '1px solid rgba(212,175,127,0.35)' }}
+                animate={{ scale: [1, 1.08, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               />
-              <CoinDisc />
-              <div className="absolute inset-0" style={{ transform: 'rotateX(180deg)' }}>
-                <CoinDiscTails />
-              </div>
-              {/* Result overlay — fades in over the face once the coin has landed */}
-              <AnimatePresence>
-                {phase === 'result' && outcome && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute flex flex-col items-center justify-center gap-1.5 rounded-full"
-                    style={{ inset: 16, background: 'rgba(12,9,6,0.94)' }}
-                  >
-                    {outcome.result === 'win' ? (
-                      <>
-                        <span className="text-4xl font-black tracking-tight" style={{ color: '#F4E4C1', textShadow: '0 0 18px rgba(212,175,127,0.5)' }}>
-                          {mode === 'transaction' ? 'FREE' : '2x'}
-                        </span>
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/80">
-                          {mode === 'transaction' ? 'REFUNDED' : 'DOUBLE'}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#D4AF7F" strokeWidth={2.5}>
-                          <circle cx="12" cy="12" r="9" />
-                          <path strokeLinecap="round" d="M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 1.1-.7 1.7-1.6 2.3-.9.6-1.4 1.1-1.4 2.2M12 17h.01" />
-                        </svg>
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-accent/60">
-                          {mode === 'transaction' ? 'DOUBLED' : 'NEXT TIME'}
-                        </span>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            )}
+
+            {/* Airborne float wrapper (separate from the flip squash) */}
+            <motion.div
+              className="relative w-40 h-40"
+              animate={phase === 'flipping' ? { y: [0, -16, 0] } : { y: 0 }}
+              transition={
+                phase === 'flipping'
+                  ? { duration: 0.9, repeat: Infinity, ease: 'easeInOut' }
+                  : { duration: 0.3 }
+              }
+            >
+              {/* Cast shadow on the "ground" */}
+              <motion.div
+                className="absolute left-1/2 -translate-x-1/2 rounded-full pointer-events-none"
+                style={{
+                  bottom: -26,
+                  width: 108,
+                  height: 15,
+                  background: 'radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 72%)',
+                }}
+                animate={{ scale: phase === 'flipping' ? [1, 0.7, 1] : 1, opacity: phase === 'flipping' ? [0.55, 0.3, 0.55] : 0.55 }}
+                transition={phase === 'flipping' ? { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
+              />
+
+              <motion.button
+                type="button"
+                onClick={startFlip}
+                disabled={phase !== 'idle'}
+                animate={coin}
+                whileHover={phase === 'idle' ? { scale: 1.04 } : undefined}
+                whileTap={phase === 'idle' ? { scale: 0.96 } : undefined}
+                className="relative w-40 h-40 rounded-full block"
+                style={{
+                  transformOrigin: 'center',
+                  cursor: phase === 'idle' ? 'pointer' : 'default',
+                  filter: 'drop-shadow(0 16px 34px rgba(0,0,0,0.55))',
+                }}
+              >
+                {face === 'heads' ? <HeadsFace /> : <TailsFace />}
+              </motion.button>
+            </motion.div>
           </div>
+
+          {phase === 'idle' && (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent/60 mb-4 animate-pulse">
+              Tap the coin to flip
+            </p>
+          )}
 
           {phase === 'result' && outcome && (
             <motion.div
@@ -349,36 +355,47 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
               className="w-full"
             >
               <div
-                className="rounded-2xl p-4 mb-4"
+                className="rounded-2xl p-4 mb-4 flex items-center justify-between"
                 style={{
-                  background: outcome.result === 'win' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                  border: `1px solid ${outcome.result === 'win' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                  background: won ? 'rgba(34,197,94,0.09)' : 'rgba(248,180,110,0.08)',
+                  border: `1px solid ${won ? 'rgba(34,197,94,0.28)' : 'rgba(248,180,110,0.24)'}`,
                 }}
               >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 mb-1">
-                  {mode === 'transaction'
-                    ? outcome.result === 'win' ? 'Refunded' : 'Charged double'
-                    : outcome.result === 'win' ? 'You called it' : 'Result'}
-                </p>
-                <p className={`text-2xl font-bold font-mono ${outcome.result === 'win' ? 'text-green-400' : 'text-amber-400/80'}`}>
-                  {outcome.result === 'win' ? '+' : '-'}{fmt(amount)}
-                </p>
-                {outcome.result === 'win' && outcome.payoutSignature && (
-                  <a
-                    href={`https://explorer.solana.com/tx/${outcome.payoutSignature}?cluster=devnet`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-2 text-[11px] text-accent/70 hover:text-accent underline underline-offset-2"
-                  >
-                    View payout on explorer
-                  </a>
-                )}
+                <div className="text-left">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40 mb-0.5">
+                    {mode === 'transaction'
+                      ? won ? 'Refunded — free' : 'Charged double'
+                      : won ? 'You called it' : "House's round"}
+                  </p>
+                  <p className={`text-2xl font-bold font-mono tabular-nums ${won ? 'text-green-400' : 'text-amber-300/90'}`}>
+                    {won ? '+' : '−'}{fmt(amount)}
+                  </p>
+                </div>
+                <span
+                  className="text-[11px] font-black tracking-[0.18em] px-2.5 py-1 rounded-full"
+                  style={{
+                    color: won ? '#4ade80' : '#f8b46e',
+                    background: won ? 'rgba(74,222,128,0.12)' : 'rgba(248,180,110,0.12)',
+                  }}
+                >
+                  {won ? 'HEADS' : 'TAILS'}
+                </span>
               </div>
+              {won && outcome.payoutSignature && (
+                <a
+                  href={`https://explorer.solana.com/tx/${outcome.payoutSignature}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mb-3 text-[11px] text-accent/70 hover:text-accent underline underline-offset-2"
+                >
+                  View payout on explorer ↗
+                </a>
+              )}
               <button
                 onClick={finish}
                 className="w-full py-3 rounded-xl font-semibold text-sm bg-accent text-[#0A0A0A] hover:opacity-90 transition-opacity"
               >
-                {outcome.result === 'win' ? 'Nice' : 'Got it'}
+                {won ? 'Collect' : 'Done'}
               </button>
             </motion.div>
           )}
