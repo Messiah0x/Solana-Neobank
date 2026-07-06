@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, type MotionValue } from 'framer-motion';
 import type { FlipCurrency, FlipResult } from '@/lib/api';
 
 interface DoubleOrNothingModalProps {
@@ -14,11 +14,12 @@ interface DoubleOrNothingModalProps {
   mode?: 'wager' | 'transaction';
 }
 
-// Minute-tick ring around the coin field — a mint-style detail that reads as
-// engraved metal rather than flat graphic.
+// Minute-tick ring — a mint-style detail that reads as engraved metal.
+// Deliberately filter-free: iOS Safari rasterizes SVG filter regions at low
+// resolution, which is what made the mark look pixelated.
 function TickRing({ color, opacity }: { color: string; opacity: number }) {
   return (
-    <g stroke={color} strokeOpacity={opacity} strokeWidth="1.4" strokeLinecap="round">
+    <g stroke={color} strokeWidth="1.4" strokeLinecap="round">
       {Array.from({ length: 36 }).map((_, i) => {
         const a = (i / 36) * Math.PI * 2;
         const long = i % 3 === 0;
@@ -61,18 +62,18 @@ function HeadsFace() {
           <stop offset="46%" stopColor="#F2D79E" />
           <stop offset="100%" stopColor="#B0823A" />
         </linearGradient>
-        <linearGradient id="hSheen" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.6" />
-          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="hOcc" cx="50%" cy="88%" r="55%">
+        <radialGradient id="hSheen" cx="38%" cy="26%" r="46%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="hAura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#F4D890" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#F4D890" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="hOcc" cx="50%" cy="90%" r="52%">
           <stop offset="0%" stopColor="#000000" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#000000" stopOpacity="0" />
         </radialGradient>
-        <filter id="hGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.4" floodColor="#F2D48C" floodOpacity="0.55" />
-        </filter>
-        <filter id="hBlur"><feGaussianBlur stdDeviation="6" /></filter>
       </defs>
 
       <circle cx="100" cy="100" r="99" fill="none" stroke="#000000" strokeOpacity="0.55" strokeWidth="1.5" />
@@ -87,8 +88,9 @@ function HeadsFace() {
       {/* guilloché detail */}
       <circle cx="100" cy="100" r="65" fill="none" stroke="#E4C588" strokeOpacity="0.16" strokeWidth="1" strokeDasharray="0.5 3.5" />
       <TickRing color="#EBD09B" opacity={0.34} />
-      {/* Avanor monogram */}
-      <g filter="url(#hGlow)" transform="translate(100 105) scale(0.86) translate(-37.5 -50)">
+      {/* soft aura + crisp monogram */}
+      <ellipse cx="100" cy="103" rx="42" ry="48" fill="url(#hAura)" />
+      <g transform="translate(100 105) scale(0.86) translate(-37.5 -50)">
         <path
           fill="url(#hMark)"
           fillRule="evenodd"
@@ -96,8 +98,8 @@ function HeadsFace() {
           d="M37.5 2 L0 98 L14 98 L37.5 22 L61 98 L75 98 L37.5 2 Z M37.5 62 L28 98 L47 98 Z"
         />
       </g>
-      {/* specular sweep */}
-      <ellipse cx="72" cy="44" rx="56" ry="30" fill="url(#hSheen)" filter="url(#hBlur)" transform="rotate(-22 72 44)" />
+      {/* specular sweep (gradient, no filter) */}
+      <ellipse cx="76" cy="52" rx="62" ry="44" fill="url(#hSheen)" transform="rotate(-20 76 52)" />
     </svg>
   );
 }
@@ -121,21 +123,21 @@ function TailsFace() {
         </radialGradient>
         <linearGradient id="tMark" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="50%" stopColor="#DDE4EE" />
-          <stop offset="100%" stopColor="#96A2B1" />
+          <stop offset="50%" stopColor="#E4EAF2" />
+          <stop offset="100%" stopColor="#9DA9B8" />
         </linearGradient>
-        <linearGradient id="tSheen" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
-          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="tOcc" cx="50%" cy="88%" r="55%">
+        <radialGradient id="tSheen" cx="38%" cy="26%" r="46%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="tAura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#C9D6E8" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#C9D6E8" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="tOcc" cx="50%" cy="90%" r="52%">
           <stop offset="0%" stopColor="#000000" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#000000" stopOpacity="0" />
         </radialGradient>
-        <filter id="tGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#C3D2E6" floodOpacity="0.55" />
-        </filter>
-        <filter id="tBlur"><feGaussianBlur stdDeviation="6" /></filter>
       </defs>
 
       <circle cx="100" cy="100" r="99" fill="none" stroke="#000000" strokeOpacity="0.55" strokeWidth="1.5" />
@@ -147,35 +149,48 @@ function TailsFace() {
       <circle cx="100" cy="100" r="83" fill="none" stroke="#E8EEF6" strokeOpacity="0.16" strokeWidth="1" />
       <circle cx="100" cy="100" r="65" fill="none" stroke="#B9C6D6" strokeOpacity="0.16" strokeWidth="1" strokeDasharray="0.5 3.5" />
       <TickRing color="#D3DEEC" opacity={0.34} />
-      <g filter="url(#tGlow)">
-        <text
-          x="101"
-          y="102"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontFamily="'Helvetica Neue', Arial, sans-serif"
-          fontWeight="800"
-          fontSize="60"
-          letterSpacing="-2"
-          fill="url(#tMark)"
-        >
-          2×
-        </text>
-      </g>
-      <ellipse cx="72" cy="44" rx="56" ry="30" fill="url(#tSheen)" filter="url(#tBlur)" transform="rotate(-22 72 44)" />
+      <ellipse cx="100" cy="100" rx="46" ry="40" fill="url(#tAura)" />
+      <text
+        x="101"
+        y="103"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontFamily="'Helvetica Neue', Arial, sans-serif"
+        fontWeight="800"
+        fontSize="62"
+        letterSpacing="-2"
+        fill="url(#tMark)"
+      >
+        2×
+      </text>
+      <ellipse cx="76" cy="52" rx="62" ry="44" fill="url(#tSheen)" transform="rotate(-20 76 52)" />
     </svg>
   );
 }
 
 type Phase = 'idle' | 'flipping' | 'result' | 'error';
 
+// A promise-returning tween of a motion value — version-robust (onComplete
+// fires on every framer-motion build we support).
+function tween(value: MotionValue<number>, to: number | number[], opts: Record<string, unknown>) {
+  return new Promise<void>((resolve) => {
+    animate(value, to as never, { ...opts, onComplete: () => resolve() });
+  });
+}
+
 export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, onSettled, mode = 'wager' }: DoubleOrNothingModalProps) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [outcome, setOutcome] = useState<FlipResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [face, setFace] = useState<'heads' | 'tails'>('heads');
-  const coin = useAnimation();
   const flippingRef = useRef(false);
+
+  // The coin's vertical squash drives everything: the face flattens toward the
+  // edge, and the milled edge fades in as it turns side-on. No CSS 3D /
+  // backface-visibility (which iOS fails to composite for inline SVG).
+  const scaleY = useMotionValue(1);
+  const edgeOpacity = useTransform(scaleY, [0.12, 0.34, 0.64], [1, 0.85, 0]);
+  const edgeScaleX = useTransform(scaleY, [0.08, 1], [1, 0.9]);
 
   const symbol = currency === 'USDC' ? '$' : '';
   const suffix = currency === 'USDC' ? '' : ' SOL';
@@ -183,15 +198,17 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
 
   const won = outcome?.result === 'win';
 
-  // A pure-2D flip: the coin squashes edge-on (scaleY → ~0), swaps face while
-  // it's invisibly thin, and expands again. No CSS 3D / backface-visibility,
-  // which iOS Safari fails to composite for inline SVG. Robust everywhere.
+  const edgeBg =
+    face === 'heads'
+      ? 'linear-gradient(180deg, rgba(255,247,224,0.7) 0%, rgba(212,175,127,0.25) 42%, rgba(94,65,24,0.75) 100%), repeating-linear-gradient(90deg, #F0D69C 0 2px, #6E4E1E 2px 4px)'
+      : 'linear-gradient(180deg, rgba(252,253,255,0.7) 0%, rgba(170,181,196,0.25) 42%, rgba(61,70,83,0.75) 100%), repeating-linear-gradient(90deg, #E4EAF2 0 2px, #3D4653 2px 4px)';
+
   async function tumble() {
     while (flippingRef.current) {
-      await coin.start({ scaleY: 0.08, transition: { duration: 0.13, ease: 'easeInOut' } });
+      await tween(scaleY, 0.08, { duration: 0.13, ease: 'easeInOut' });
       if (!flippingRef.current) break;
       setFace((f) => (f === 'heads' ? 'tails' : 'heads'));
-      await coin.start({ scaleY: 1, transition: { duration: 0.13, ease: 'easeInOut' } });
+      await tween(scaleY, 1, { duration: 0.13, ease: 'easeInOut' });
     }
   }
 
@@ -206,18 +223,15 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
       await spin;
       // Decisive landing on the face that matches the outcome, with an
       // overshoot bounce for weight.
-      await coin.start({ scaleY: 0.08, transition: { duration: 0.12, ease: 'easeIn' } });
+      await tween(scaleY, 0.08, { duration: 0.12, ease: 'easeIn' });
       setFace(result.result === 'win' ? 'heads' : 'tails');
-      await coin.start({
-        scaleY: [0.08, 1.12, 0.95, 1],
-        transition: { duration: 0.52, times: [0, 0.55, 0.8, 1], ease: 'easeOut' },
-      });
+      await tween(scaleY, [0.08, 1.12, 0.95, 1], { duration: 0.52, times: [0, 0.55, 0.8, 1], ease: 'easeOut' });
       setOutcome(result);
       setPhase('result');
     } catch (e) {
       flippingRef.current = false;
       await spin.catch(() => {});
-      await coin.start({ scaleY: 1, transition: { duration: 0.15 } });
+      await tween(scaleY, 1, { duration: 0.15, ease: 'easeOut' });
       setError(e instanceof Error ? e.message : 'Something went wrong');
       setPhase('error');
     }
@@ -322,15 +336,32 @@ export function DoubleOrNothingModal({ amount, currency, executeFlip, onClose, o
                 transition={phase === 'flipping' ? { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
               />
 
+              {/* Milled coin edge — revealed as the coin turns side-on, giving
+                  real 3D thickness at mid-flip. Sits behind the face. */}
+              <motion.div
+                className="absolute left-1/2 top-1/2 pointer-events-none"
+                style={{
+                  width: 150,
+                  height: 34,
+                  x: '-50%',
+                  y: '-50%',
+                  borderRadius: '50%',
+                  opacity: edgeOpacity,
+                  scaleX: edgeScaleX,
+                  backgroundImage: edgeBg,
+                  boxShadow: 'inset 0 2px 3px rgba(255,255,255,0.35), inset 0 -3px 5px rgba(0,0,0,0.5), 0 3px 8px rgba(0,0,0,0.45)',
+                }}
+              />
+
               <motion.button
                 type="button"
                 onClick={startFlip}
                 disabled={phase !== 'idle'}
-                animate={coin}
                 whileHover={phase === 'idle' ? { scale: 1.04 } : undefined}
                 whileTap={phase === 'idle' ? { scale: 0.96 } : undefined}
                 className="relative w-40 h-40 rounded-full block"
                 style={{
+                  scaleY,
                   transformOrigin: 'center',
                   cursor: phase === 'idle' ? 'pointer' : 'default',
                   filter: 'drop-shadow(0 16px 34px rgba(0,0,0,0.55))',
