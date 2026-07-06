@@ -153,9 +153,13 @@ function TxRow({ tx, index, onFlip }: { tx: Transaction; index: number; onFlip: 
         {flippable && (
           <button
             onClick={() => onFlip(tx)}
-            className="mt-1.5 text-[10px] font-bold text-accent/70 hover:text-accent uppercase tracking-wider transition-colors"
+            title="Flip this payment — heads it's free, tails you pay double"
+            className="mt-1.5 inline-flex items-center gap-1 pl-1.5 pr-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide text-accent/80 border border-accent/25 bg-accent/[0.06] hover:bg-accent/15 hover:text-accent hover:border-accent/45 transition-all"
           >
-            Flip it ↻
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M20 9A8 8 0 006.34 6.34M4 15a8 8 0 0013.66 2.66" />
+            </svg>
+            Flip
           </button>
         )}
       </div>
