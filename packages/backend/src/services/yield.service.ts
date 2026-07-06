@@ -215,6 +215,36 @@ async function assertTxConfirmed(signature: string) {
   throw new Error('Transaction not confirmed — try again');
 }
 
+// Binds a confirmed signature to this user's own on-chain activity before we
+// record it in the ledger. Without this, a client could submit any confirmed
+// signature on the network (or someone else's) with an inflated amount and
+// corrupt their position. We require the user's wallet to be a signer and the
+// referenced marginfi account to appear in the transaction, so a signature can
+// only ever affect the ledger of the wallet that actually produced it.
+async function verifyYieldTx(signature: string, userPk: PublicKey, marginfiAccountPk?: string) {
+  const parsed = await connection.getParsedTransaction(signature, {
+    maxSupportedTransactionVersion: 0,
+    commitment: 'confirmed',
+  });
+  if (!parsed?.meta || parsed.meta.err) {
+    throw Object.assign(new Error('Transaction not found on-chain'), { code: 'BAD_TX' });
+  }
+
+  const keys = parsed.transaction.message.accountKeys;
+  const signed = keys.some((k) => k.signer && k.pubkey.equals(userPk));
+  if (!signed) {
+    throw Object.assign(new Error('Transaction was not signed by your wallet'), { code: 'BAD_TX' });
+  }
+
+  if (marginfiAccountPk) {
+    const account = new PublicKey(marginfiAccountPk);
+    const referenced = keys.some((k) => k.pubkey.equals(account));
+    if (!referenced) {
+      throw Object.assign(new Error('Transaction does not reference your yield account'), { code: 'BAD_TX' });
+    }
+  }
+}
+
 // Records the signature in the YieldTxn ledger; the unique constraint makes
 // confirmation idempotent. Returns false if this signature was already
 // processed (replay or double-submit).
@@ -243,6 +273,7 @@ export async function confirmDeposit(
   if (amountUsdc <= 0) throw new Error('Amount must be positive');
   const dbUserId = await resolveDbUserId(userId);
   await assertTxConfirmed(signature);
+  await verifyYieldTx(signature, await getUserPublicKey(dbUserId), marginfiAccountPk);
 
   await prisma.$transaction(async (tx) => {
     const fresh = await recordYieldTxn(tx, dbUserId, 'deposit', amountUsdc, signature);
@@ -275,6 +306,7 @@ export async function confirmWithdraw(userId: string, amountUsdc: number, signat
     if (!fresh) return;
     const position = await tx.yieldPosition.findUnique({ where: { userId: dbUserId } });
     if (!position) throw Object.assign(new Error('No yield position found'), { code: 'NOT_FOUND' });
+    await verifyYieldTx(signature, await getUserPublicKey(dbUserId), position.marginfiAccountPk ?? undefined);
     await tx.yieldPosition.update({
       where: { userId: dbUserId },
       data: { depositAmount: Math.max(0, position.depositAmount - amountUsdc) },

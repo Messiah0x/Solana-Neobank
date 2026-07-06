@@ -16,6 +16,17 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+          // A deliberately narrow CSP: it locks down the directives that can't
+          // break third-party integrations (no plugins/objects, no base-tag
+          // hijacking, no framing/embedding) while leaving script/style/
+          // connect/img/frame sources unrestricted so Privy, Solana RPC,
+          // Sentry, and remote logos keep working. Tightening script-src /
+          // connect-src to an explicit allowlist is the next step, but must be
+          // validated against Privy's embedded-wallet flow before enforcing.
+          {
+            key: 'Content-Security-Policy',
+            value: "object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+          },
         ],
       },
     ];

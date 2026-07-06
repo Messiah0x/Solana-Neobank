@@ -9,7 +9,7 @@ import yieldRoutes from './routes/yield';
 import flipRoutes from './routes/flip';
 import healthRoutes from './routes/health';
 import marketRoutes from './routes/market';
-import { authenticate, logAuthMode } from './lib/auth';
+import { authenticate, logAuthMode, assertAuthConfigured } from './lib/auth';
 
 // Error monitoring — no-op unless SENTRY_DSN is configured.
 Sentry.init({
@@ -67,7 +67,9 @@ async function build() {
 
   // Privy access-token verification. Routes marked `config: { public: true }`
   // (health, APY) are exempt; everything else requires a verified identity
-  // when PRIVY_APP_ID/PRIVY_APP_SECRET are configured.
+  // when PRIVY_APP_ID/PRIVY_APP_SECRET are configured. In production those
+  // credentials are mandatory — boot aborts here otherwise.
+  assertAuthConfigured();
   logAuthMode(server.log);
   server.addHook('preHandler', authenticate);
 

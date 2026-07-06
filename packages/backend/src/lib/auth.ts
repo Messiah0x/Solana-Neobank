@@ -25,13 +25,27 @@ export const authStrict = Boolean(PRIVY_APP_ID && PRIVY_APP_SECRET);
 
 const privy = authStrict ? new PrivyClient(PRIVY_APP_ID!, PRIVY_APP_SECRET!) : null;
 
+/**
+ * Fail closed: in production the API must never fall back to trusting
+ * client-supplied userIds. Called at boot so a misconfigured deploy crashes
+ * loudly instead of silently shipping an unauthenticated, fully-IDOR API.
+ */
+export function assertAuthConfigured() {
+  if (process.env.NODE_ENV === 'production' && !authStrict) {
+    throw new Error(
+      'Refusing to start in production without auth: set PRIVY_APP_ID and PRIVY_APP_SECRET. ' +
+        'Without them the API would trust client-supplied userIds and expose every account.',
+    );
+  }
+}
+
 export function logAuthMode(log: { warn: (msg: string) => void; info: (msg: string) => void }) {
   if (authStrict) {
     log.info('Auth: Privy token verification ENABLED (strict mode)');
   } else {
     log.warn(
       'Auth: PRIVY_APP_ID / PRIVY_APP_SECRET not set — API trusts client-supplied userIds. ' +
-        'Set both env vars to enforce token verification before going to production.',
+        'This is permitted only outside production. Set both env vars before deploying.',
     );
   }
 }

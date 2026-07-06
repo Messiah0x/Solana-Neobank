@@ -34,7 +34,10 @@ export function NetWorthSection({ cryptoTotal, cryptoLoading }: NetWorthSectionP
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setAssets(JSON.parse(raw));
+      const parsed = raw ? JSON.parse(raw) : null;
+      // Only accept a well-formed array; corrupt/non-array JSON would crash
+      // the `.map()`/`.reduce()` below.
+      if (Array.isArray(parsed)) setAssets(parsed);
     } catch {
       /* ignore */
     }

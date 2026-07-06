@@ -55,7 +55,10 @@ export default function PortfolioPage() {
     let saved: TrackedWallet[] = [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) saved = JSON.parse(raw);
+      const parsed = raw ? JSON.parse(raw) : null;
+      // Guard against tampered/corrupt storage holding non-array JSON, which
+      // would otherwise crash the page on the `.some()`/`.map()` below.
+      if (Array.isArray(parsed)) saved = parsed;
     } catch {
       /* ignore */
     }

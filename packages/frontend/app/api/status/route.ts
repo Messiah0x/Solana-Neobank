@@ -4,9 +4,9 @@ export const dynamic = 'force-dynamic';
 
 const BACKEND_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
-// Server-side probe of the backend, used for diagnostics and uptime checks.
-// Returns what the Vercel server sees when calling the backend directly,
-// independent of the client's network.
+// Public, unauthenticated uptime probe. It deliberately exposes only whether
+// the backend is reachable and healthy — never the internal backend origin,
+// the raw health body, or upstream error strings, which would only aid recon.
 export async function GET() {
   const startedAt = Date.now();
   try {
@@ -14,23 +14,18 @@ export async function GET() {
       cache: 'no-store',
       signal: AbortSignal.timeout(10_000),
     });
-    const body = await res.text();
-    return NextResponse.json({
-      frontend: 'ok',
-      backendOrigin: BACKEND_ORIGIN,
-      backendStatus: res.status,
-      backendBody: body.slice(0, 500),
-      latencyMs: Date.now() - startedAt,
-    });
-  } catch (err) {
+    const healthy = res.ok;
     return NextResponse.json(
       {
         frontend: 'ok',
-        backendOrigin: BACKEND_ORIGIN,
-        backendStatus: 'unreachable',
-        error: err instanceof Error ? err.message : String(err),
+        backend: healthy ? 'ok' : 'degraded',
         latencyMs: Date.now() - startedAt,
       },
+      { status: healthy ? 200 : 503 },
+    );
+  } catch {
+    return NextResponse.json(
+      { frontend: 'ok', backend: 'unreachable', latencyMs: Date.now() - startedAt },
       { status: 502 },
     );
   }

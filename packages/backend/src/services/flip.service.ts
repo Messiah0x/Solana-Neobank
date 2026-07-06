@@ -26,10 +26,18 @@ const USDC_MINT: Record<string, string> = {
 const USDC_DECIMALS = 6;
 
 // Per-flip bet caps — keep individual exposure small relative to the
-// house bankroll. Overridable per environment.
+// house bankroll. Overridable per environment. A non-numeric override must
+// never silently disable the cap (Number('abc') === NaN, and `x > NaN` is
+// always false), so we fall back to the default when the value isn't a
+// finite positive number.
+function positiveEnvNumber(raw: string | undefined, fallback: number): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
 const MAX_BET = {
-  SOL: Number(process.env.FLIP_MAX_BET_SOL ?? 1),
-  USDC: Number(process.env.FLIP_MAX_BET_USDC ?? 100),
+  SOL: positiveEnvNumber(process.env.FLIP_MAX_BET_SOL, 1),
+  USDC: positiveEnvNumber(process.env.FLIP_MAX_BET_USDC, 100),
 } as const;
 
 // SOL the house always keeps back for payout transaction fees.
@@ -208,6 +216,13 @@ async function verifyBetOnChain(
       ((parsed.meta.postBalances[houseIndex] ?? 0) - (parsed.meta.preBalances[houseIndex] ?? 0)) /
       LAMPORTS_PER_SOL;
     if (delta + epsilon < amount) throw err('Bet amount does not match the on-chain transfer', 'BAD_BET');
+    // The stake must actually have left the user's wallet (they also pay the
+    // fee, so their outflow is >= amount). Guards against any construction
+    // that credits the house from a source the user doesn't control.
+    const userOutflow =
+      ((parsed.meta.preBalances[userIndex] ?? 0) - (parsed.meta.postBalances[userIndex] ?? 0)) /
+      LAMPORTS_PER_SOL;
+    if (userOutflow + epsilon < amount) throw err('Bet was not funded from your wallet', 'BAD_BET');
     return;
   }
 
@@ -218,6 +233,15 @@ async function verifyBetOnChain(
   const postAmount = post?.uiTokenAmount.uiAmount ?? 0;
   if (postAmount - preAmount + epsilon < amount) {
     throw err('Bet amount does not match the on-chain transfer', 'BAD_BET');
+  }
+  // The USDC must have come out of the user's own token account.
+  const userOwner = userPk.toString();
+  const userPre =
+    parsed.meta.preTokenBalances?.find((b) => b.owner === userOwner)?.uiTokenAmount.uiAmount ?? 0;
+  const userPost =
+    parsed.meta.postTokenBalances?.find((b) => b.owner === userOwner)?.uiTokenAmount.uiAmount ?? 0;
+  if (userPre - userPost + epsilon < amount) {
+    throw err('Bet was not funded from your wallet', 'BAD_BET');
   }
 }
 
